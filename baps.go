@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,7 +15,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gucooing/BaPs/command"
 	"github.com/gucooing/BaPs/common/enter"
+	"github.com/gucooing/BaPs/common/rank"
 	"github.com/gucooing/BaPs/config"
 	"github.com/gucooing/BaPs/db"
 	"github.com/gucooing/BaPs/gateway"
@@ -56,16 +59,23 @@ func NewBaPs() {
 		logger.CloseLogger()
 		return
 	}
+	// 检查数据库内容
+	enter.InitEnterSet()
 	// 初始化gin
 	router, server := newGin(cfg.HttpNet)
 	// 初始化sdk
 	sdk.New(router)
 	// 初始化gateWay
 	gateway.NewGateWay(router)
+	// 初始化command
+	command.NewCommand(router)
 	// 初始化资源文件
 	gdconf.LoadGameConfig(cfg.DataPath, cfg.ResourcesPath)
+	// 初始化排名数据
+	rankInfo := rank.NewRank()
 	// 启动服务器
 	go func() {
+		logger.Info("BaPs启动成功!")
 		if err = Run(cfg.HttpNet, server); err != nil {
 			if !errors.Is(http.ErrServerClosed, err) {
 				logger.Error("服务器错误:%s", err.Error())
@@ -80,6 +90,7 @@ func NewBaPs() {
 		defer cancel()
 		logger.Info("Max Close Time 5 Minute")
 		server.Close()
+		rankInfo.Close()
 		enter.UpAllDate()
 		logger.Info("BaPs Close")
 		logger.CloseLogger()
@@ -127,4 +138,30 @@ func Run(appNet *config.HttpNet, server *http.Server) error {
 		return server.ListenAndServeTLS(appNet.CertFile, appNet.KeyFile)
 	}
 	return server.ListenAndServe()
+}
+
+func TestIrc() {
+	tCPListener, err := net.Listen("tcp", "0.0.0.0:16667")
+	if err != nil {
+		return
+	}
+	defer tCPListener.Close()
+	for {
+		conn, err := tCPListener.Accept()
+		if err != nil {
+			continue
+		}
+		go func() {
+			defer conn.Close()
+			for {
+				buf := make([]byte, 1024)
+				n, err := conn.Read(buf)
+				if err != nil {
+					return
+				}
+				bin := buf[:n]
+				logger.Info("irc:c->s:%s", string(bin))
+			}
+		}()
+	}
 }

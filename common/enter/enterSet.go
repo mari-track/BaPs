@@ -3,6 +3,9 @@ package enter
 import (
 	"sync"
 	"time"
+
+	"github.com/gucooing/BaPs/db"
+	"github.com/gucooing/BaPs/pkg/alg"
 )
 
 var es *EnterSet
@@ -12,6 +15,18 @@ type EnterSet struct {
 	sessionSync    sync.RWMutex
 	EnterTicketMap map[string]*TicketInfo // 登录通行证字典-缓存
 	ticketSync     sync.RWMutex
+	MailMap        map[int64]*db.YostarMail // 全服邮件
+	mailSync       sync.RWMutex
+	FriendMap      map[int64]*AccountFriend // 全部玩家的好友关系
+	friendSync     sync.RWMutex
+	YostarClan     map[int64]*YostarClan // 全部缓存社团
+	YostarClanHash map[string]int64
+	ycSync         sync.RWMutex
+}
+
+func InitEnterSet() {
+	e := getEnterSet()
+	e.checkMail()
 }
 
 func getEnterSet() *EnterSet {
@@ -19,6 +34,9 @@ func getEnterSet() *EnterSet {
 		es = &EnterSet{
 			sessionSync: sync.RWMutex{},
 			ticketSync:  sync.RWMutex{},
+			mailSync:    sync.RWMutex{},
+			friendSync:  sync.RWMutex{},
+			ycSync:      sync.RWMutex{},
 		}
 		go es.Check()
 	}
@@ -26,10 +44,18 @@ func getEnterSet() *EnterSet {
 }
 
 func (e *EnterSet) Check() {
-	ticker := time.NewTicker(time.Second * 300) // 五分钟验证一次
+	ticker := time.NewTicker(time.Second * 300)       // 五分钟验证一次
+	friendTicker := time.NewTimer(alg.GetEveryDay4()) // 每天四点
 	for {
-		<-ticker.C
-		e.checkTicket()
-		e.checkSession()
+		select {
+		case <-ticker.C:
+			e.checkTicket()
+			e.checkSession()
+			e.checkMail()
+		case <-friendTicker.C:
+			e.checkAccountFriend()
+			e.checkYostarClan()
+			friendTicker.Reset(alg.GetEveryDay4())
+		}
 	}
 }

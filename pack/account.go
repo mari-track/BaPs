@@ -1,14 +1,15 @@
 package pack
 
 import (
-	"time"
+	"strconv"
 
+	"github.com/gucooing/BaPs/common/check"
 	"github.com/gucooing/BaPs/common/enter"
 	"github.com/gucooing/BaPs/game"
-	"github.com/gucooing/BaPs/mx"
-	"github.com/gucooing/BaPs/mx/cmd"
-	"github.com/gucooing/BaPs/mx/proto"
 	"github.com/gucooing/BaPs/pkg/logger"
+	"github.com/gucooing/BaPs/pkg/mx"
+	"github.com/gucooing/BaPs/protocol/cmd"
+	"github.com/gucooing/BaPs/protocol/proto"
 )
 
 func AccountAuth(s *enter.Session, request, response mx.Message) {
@@ -20,22 +21,7 @@ func AccountAuth(s *enter.Session, request, response mx.Message) {
 	rsp.AccountDB = game.GetAccountDB(s)
 	rsp.StaticOpenConditions = game.GetStaticOpenConditions(s)
 	rsp.AttendanceBookRewards = game.GetAttendanceBookRewards(s)
-	rsp.AttendanceHistoryDBs = []*proto.AttendanceHistoryDB{
-		{
-			ServerId:               999,
-			AccountServerId:        s.AccountServerId,
-			AttendanceBookUniqueId: 1,
-			AttendedDay:            make(map[int64]*time.Time),
-			Expired:                false,
-		},
-		{
-			ServerId:               998,
-			AccountServerId:        s.AccountServerId,
-			AttendanceBookUniqueId: 22,
-			AttendedDay:            make(map[int64]*time.Time),
-			Expired:                false,
-		},
-	}
+	rsp.AttendanceHistoryDBs = game.GetAttendanceHistoryDBs(s)
 
 	rsp.IssueAlertInfos = make([]*proto.IssueAlertInfoDB, 0)
 	rsp.OpenConditions = make([]*proto.OpenConditionDB, 0)
@@ -57,6 +43,9 @@ func AccountNickname(s *enter.Session, request, response mx.Message) {
 	req := request.(*proto.AccountNicknameRequest)
 	rsp := response.(*proto.AccountNicknameResponse)
 
+	if !check.CheckName(req.Nickname) {
+		logger.Warn("玩家昵称检查不通过,但未作拦截处理,仅通知")
+	}
 	game.SetAccountNickname(s, req.Nickname)
 	rsp.AccountDB = game.GetAccountDB(s)
 }
@@ -68,13 +57,19 @@ func ProofTokenRequestQuestion(s *enter.Session, request, response mx.Message) {
 	rsp.Hint = 1
 }
 
-func NetworkTimeSync(s *enter.Session, request, response mx.Message) {}
+func NetworkTimeSync(s *enter.Session, request, response mx.Message) {
+	rsp := response.(*proto.NetworkTimeSyncResponse)
+
+	rsp.ReceiveTick = game.GetServerTime()
+	rsp.EchoSendTick = game.GetServerTimeTick()
+}
 
 func AccountLoginSync(s *enter.Session, request, response mx.Message) {
 	req := request.(*proto.AccountLoginSyncRequest)
 	rsp := response.(*proto.AccountLoginSyncResponse)
 
-	rsp.FriendCode = "BNAGBIES"
+	rsp.FriendCode = strconv.FormatInt(s.AccountServerId, 10)
+	rsp.FriendCount = int64(len(req.SyncProtocols))
 	rsp.StaticOpenConditions = game.GetStaticOpenConditions(s)
 
 	for _, cmdId := range req.SyncProtocols {
@@ -90,76 +85,76 @@ func AccountLoginSync(s *enter.Session, request, response mx.Message) {
 		}
 		syncRsp.SetSessionKey(rsp.BasePacket)
 		switch cmdId {
-		case proto.Protocol_Cafe_Get:
+		case mx.Protocol_Cafe_Get:
 			CafeGetInfo(s, syncReq, syncRsp)
 			rsp.CafeGetInfoResponse = syncRsp.(*proto.CafeGetInfoResponse)
-		case proto.Protocol_Account_CurrencySync:
+		case mx.Protocol_Account_CurrencySync:
 			AccountCurrencySync(s, syncReq, syncRsp)
 			rsp.AccountCurrencySyncResponse = syncRsp.(*proto.AccountCurrencySyncResponse)
-		case proto.Protocol_Character_List:
+		case mx.Protocol_Character_List:
 			CharacterList(s, syncReq, syncRsp)
 			rsp.CharacterListResponse = syncRsp.(*proto.CharacterListResponse)
-		case proto.Protocol_Equipment_List:
+		case mx.Protocol_Equipment_List:
 			EquipmentList(s, syncReq, syncRsp)
 			rsp.EquipmentItemListResponse = syncRsp.(*proto.EquipmentItemListResponse)
-		case proto.Protocol_CharacterGear_List:
+		case mx.Protocol_CharacterGear_List:
 			CharacterGearList(s, syncReq, syncRsp)
 			rsp.CharacterGearListResponse = syncRsp.(*proto.CharacterGearListResponse)
-		case proto.Protocol_Echelon_List:
+		case mx.Protocol_Echelon_List:
 			EchelonList(s, syncReq, syncRsp)
 			rsp.EchelonListResponse = syncRsp.(*proto.EchelonListResponse)
-		case proto.Protocol_MemoryLobby_List:
+		case mx.Protocol_MemoryLobby_List:
 			MemoryLobbyList(s, syncReq, syncRsp)
 			rsp.MemoryLobbyListResponse = syncRsp.(*proto.MemoryLobbyListResponse)
-		case proto.Protocol_Campaign_List:
+		case mx.Protocol_Campaign_List:
 			CampaignList(s, syncReq, syncRsp)
 			rsp.CampaignListResponse = syncRsp.(*proto.CampaignListResponse)
-		case proto.Protocol_Arena_Login:
+		case mx.Protocol_Arena_Login:
 			ArenaLogin(s, syncReq, syncRsp)
 			rsp.ArenaLoginResponse = syncRsp.(*proto.ArenaLoginResponse)
-		case proto.Protocol_Raid_Login:
+		case mx.Protocol_Raid_Login:
 			RaidLogin(s, syncReq, syncRsp)
 			rsp.RaidLoginResponse = syncRsp.(*proto.RaidLoginResponse)
-		case proto.Protocol_EliminateRaid_Login:
+		case mx.Protocol_EliminateRaid_Login:
 			EliminateRaidLogin(s, syncReq, syncRsp)
 			rsp.EliminateRaidLoginResponse = syncRsp.(*proto.EliminateRaidLoginResponse)
-		case proto.Protocol_Craft_List:
+		case mx.Protocol_Craft_List:
 			CraftInfoList(s, syncReq, syncRsp)
 			rsp.CraftInfoListResponse = syncRsp.(*proto.CraftInfoListResponse)
-		case proto.Protocol_Clan_Login:
+		case mx.Protocol_Clan_Login:
 			ClanLogin(s, syncReq, syncRsp)
 			rsp.ClanLoginResponse = syncRsp.(*proto.ClanLoginResponse)
-		case proto.Protocol_MomoTalk_OutLine:
+		case mx.Protocol_MomoTalk_OutLine:
 			MomoTalkOutLine(s, syncReq, syncRsp)
 			rsp.MomotalkOutlineResponse = syncRsp.(*proto.MomoTalkOutLineResponse)
-		case proto.Protocol_Scenario_List:
+		case mx.Protocol_Scenario_List:
 			ScenarioList(s, syncReq, syncRsp)
 			rsp.ScenarioListResponse = syncRsp.(*proto.ScenarioListResponse)
-		case proto.Protocol_Shop_GachaRecruitList:
+		case mx.Protocol_Shop_GachaRecruitList:
 			ShopGachaRecruitList(s, syncReq, syncRsp)
 			rsp.ShopGachaRecruitListResponse = syncRsp.(*proto.ShopGachaRecruitListResponse)
-		case proto.Protocol_TimeAttackDungeon_Login:
+		case mx.Protocol_TimeAttackDungeon_Login:
 			TimeAttackDungeonLogin(s, syncReq, syncRsp)
 			rsp.TimeAttackDungeonLoginResponse = syncRsp.(*proto.TimeAttackDungeonLoginResponse)
-		case proto.Protocol_Billing_PurchaseListByYostar:
+		case mx.Protocol_Billing_PurchaseListByYostar:
 			BillingPurchaseListByYostar(s, syncReq, syncRsp)
 			rsp.BillingPurchaseListByYostarResponse = syncRsp.(*proto.BillingPurchaseListByYostarResponse)
-		case proto.Protocol_EventContent_PermanentList:
+		case mx.Protocol_EventContent_PermanentList:
 			EventContentPermanentList(s, syncReq, syncRsp)
 			rsp.EventContentPermanentListResponse = syncRsp.(*proto.EventContentPermanentListResponse)
-		case proto.Protocol_Attachment_Get:
+		case mx.Protocol_Attachment_Get:
 			AttachmentGet(s, syncReq, syncRsp)
 			rsp.AttachmentGetResponse = syncRsp.(*proto.AttachmentGetResponse)
-		case proto.Protocol_Attachment_EmblemList:
+		case mx.Protocol_Attachment_EmblemList:
 			AttachmentEmblemList(s, syncReq, syncRsp)
 			rsp.AttachmentEmblemListResponse = syncRsp.(*proto.AttachmentEmblemListResponse)
-		case proto.Protocol_Sticker_Login:
+		case mx.Protocol_Sticker_Login:
 			StickerLogin(s, syncReq, syncRsp)
 			rsp.StickerListResponse = syncRsp.(*proto.StickerLoginResponse)
-		case proto.Protocol_MultiFloorRaid_Sync:
+		case mx.Protocol_MultiFloorRaid_Sync:
 			MultiFloorRaidSync(s, syncReq, syncRsp)
 			rsp.MultiFloorRaidSyncResponse = syncRsp.(*proto.MultiFloorRaidSyncResponse)
-		case proto.Protocol_ContentSweep_MultiSweepPresetList:
+		case mx.Protocol_ContentSweep_MultiSweepPresetList:
 			ContentSweepMultiSweepPresetList(s, syncReq, syncRsp)
 			rsp.ContentSweepMultiSweepPresetListResponse = syncRsp.(*proto.ContentSweepMultiSweepPresetListResponse)
 		default:
@@ -168,17 +163,28 @@ func AccountLoginSync(s *enter.Session, request, response mx.Message) {
 	}
 }
 
-func AccountCurrencySync(s *enter.Session, request, response mx.Message) {
-	rsp := response.(*proto.AccountCurrencySyncResponse)
-
-	rsp.AccountCurrencyDB = game.GetAccountCurrencyDB(s)
-	rsp.ExpiredCurrency = make(map[proto.CurrencyTypes]int64)
-}
-
 func ContentSaveGet(s *enter.Session, request, response mx.Message) {
 
 }
 
 func ProofTokenSubmit(s *enter.Session, request, response mx.Message) {
 
+}
+
+func AccountSetRepresentCharacterAndComment(s *enter.Session, request, response mx.Message) {
+	req := request.(*proto.AccountSetRepresentCharacterAndCommentRequest)
+	rsp := response.(*proto.AccountSetRepresentCharacterAndCommentResponse)
+
+	game.SetComment(s, req.Comment)
+	game.SetLobbyStudent(s, req.RepresentCharacterServerId)
+	rsp.AccountDB = game.GetAccountDB(s)
+	rsp.RepresentCharacterDB = game.GetCharacterDB(s, game.GetRepresentCharacterUniqueId(s))
+}
+
+func ScenarioAccountStudentChange(s *enter.Session, request, response mx.Message) {
+
+}
+
+func ScenarioLobbyStudentChange(s *enter.Session, request, response mx.Message) {
+	// 逆天玩意,纯本地你发服务端干什么?
 }

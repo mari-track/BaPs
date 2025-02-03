@@ -26,8 +26,9 @@ go.work.sum
 .idea
 /build
 /test
-/common/server_only/google
+/common/server_only/*.pb.go
 /tools
 /mx/prototemp
 /bin
-/mx
+/pkg/mx
+/protocol

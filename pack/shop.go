@@ -4,9 +4,10 @@ import (
 	"time"
 
 	"github.com/gucooing/BaPs/common/enter"
+	"github.com/gucooing/BaPs/game"
 	"github.com/gucooing/BaPs/gdconf"
-	"github.com/gucooing/BaPs/mx"
-	"github.com/gucooing/BaPs/mx/proto"
+	"github.com/gucooing/BaPs/pkg/mx"
+	"github.com/gucooing/BaPs/protocol/proto"
 )
 
 func ShopList(s *enter.Session, request, response mx.Message) {
@@ -15,34 +16,42 @@ func ShopList(s *enter.Session, request, response mx.Message) {
 
 	rsp.ShopInfos = make([]*proto.ShopInfoDB, 0)
 	rsp.ShopEligmaHistoryDBs = make([]*proto.ShopEligmaHistoryDB, 0)
-
 	for _, categoryType := range req.CategoryList {
-		if categoryType == proto.ShopCategoryType_General {
-			continue
-		}
 		conf := gdconf.GetShopInfoExcel(categoryType.String())
 		info := &proto.ShopInfoDB{
 			EventContentId:      0,
 			Category:            categoryType,
-			ManualRefreshCount:  0,
-			IsRefresh:           conf.IsRefresh,
-			NextAutoRefreshDate: time.Now().Add(24 * time.Hour),
-			LastAutoRefreshDate: time.Time{},
+			ManualRefreshCount:  0,                              // 手动刷新
+			IsRefresh:           conf.IsRefresh,                 // 是否刷新
+			NextAutoRefreshDate: time.Now().Add(24 * time.Hour), // 下一次
+			LastAutoRefreshDate: time.Now(),                     // 上次刷新时间
 			ShopProductList:     make([]*proto.ShopProductDB, 0),
 		}
-		for _, product := range gdconf.GetShopExcelType(categoryType.String()) {
-			info.ShopProductList = append(info.ShopProductList, &proto.ShopProductDB{
-				EventContentId:     0,
-				ShopExcelId:        product.Id,
-				Category:           proto.ShopCategoryType(proto.ShopCategoryType_value[product.CategoryType]),
-				DisplayOrder:       product.DisplayOrder,
-				PurchaseCount:      0,
-				PurchaseCountLimit: product.PurchaseCountLimit,
-				Price:              0,
-				ProductType:        proto.ShopProductType_General,
-			})
+		if conf.IsRefresh {
+			info.ShopProductList = game.GetRefreshShopProductList(categoryType.String())
+		} else {
+			info.ShopProductList = game.GetNoRefreshShopProductList(s, categoryType.String())
 		}
 
-		rsp.ShopInfos = append(rsp.ShopInfos, info)
+		if len(info.ShopProductList) > 0 {
+			rsp.ShopInfos = append(rsp.ShopInfos, info)
+		}
 	}
+}
+
+func ShopBuyRefreshMerchandise(s *enter.Session, request, response mx.Message) {
+	// req := request.(*proto.ShopBuyRefreshMerchandiseRequest)
+	// rsp := response.(*proto.ShopBuyRefreshMerchandiseResponse)
+}
+
+/*
+0-20 1
+20-40 2
+40-60 3
+60-80 4
+5
+*/
+
+func ShopBuyEligma(s *enter.Session, request, response mx.Message) {
+
 }

@@ -5,8 +5,8 @@ import (
 
 	"github.com/gucooing/BaPs/common/enter"
 	"github.com/gucooing/BaPs/game"
-	"github.com/gucooing/BaPs/mx"
-	"github.com/gucooing/BaPs/mx/proto"
+	"github.com/gucooing/BaPs/pkg/mx"
+	"github.com/gucooing/BaPs/protocol/proto"
 )
 
 func MissionList(s *enter.Session, request, response mx.Message) {
@@ -134,8 +134,8 @@ func ScenarioClear(s *enter.Session, request, response mx.Message) {
 	rsp := response.(*proto.ScenarioClearResponse)
 
 	game.BattleCheck(s, req.BattleSummary)
-	game.FinishScenarioHistoryInfo(s, req.ScenarioId)
-
+	parcelResultList := game.FinishScenarioHistoryInfo(s, req.ScenarioId)
+	rsp.ParcelResultDB = game.ParcelResultDB(s, parcelResultList)
 	bin := game.GetScenarioHistoryInfo(s, req.ScenarioId)
 	if bin != nil {
 		rsp.ScenarioHistoryDB = &proto.ScenarioHistoryDB{

@@ -1,18 +1,13 @@
 package pack
 
 import (
-	"time"
-
 	"github.com/gucooing/BaPs/common/enter"
-	"github.com/gucooing/BaPs/mx"
-	"github.com/gucooing/BaPs/mx/proto"
+	"github.com/gucooing/BaPs/game"
+	"github.com/gucooing/BaPs/gdconf"
+	"github.com/gucooing/BaPs/pkg/logger"
+	"github.com/gucooing/BaPs/pkg/mx"
+	"github.com/gucooing/BaPs/protocol/proto"
 )
-
-func MemoryLobbyList(s *enter.Session, request, response mx.Message) {
-	rsp := response.(*proto.MemoryLobbyListResponse)
-
-	rsp.MemoryLobbyDBs = make([]*proto.MemoryLobbyDB, 0)
-}
 
 func TimeAttackDungeonLogin(s *enter.Session, request, response mx.Message) {
 	// rsp := response.(*proto.TimeAttackDungeonLoginResponse)
@@ -48,29 +43,6 @@ func EventContentPermanentList(s *enter.Session, request, response mx.Message) {
 			EventContentId:            id,
 			IsStageAllClear:           false,
 			IsReceivedCharacterReward: false,
-		})
-	}
-}
-
-func AttachmentGet(s *enter.Session, request, response mx.Message) {
-	rsp := response.(*proto.AttachmentGetResponse)
-
-	rsp.AccountAttachmentDB = &proto.AccountAttachmentDB{
-		AccountId:      s.AccountServerId,
-		EmblemUniqueId: 0,
-	}
-}
-
-func AttachmentEmblemList(s *enter.Session, request, response mx.Message) {
-	rsp := response.(*proto.AttachmentEmblemListResponse)
-
-	rsp.EmblemDBs = make([]*proto.EmblemDB, 0)
-	for _, id := range []int64{1, 2, 3, 4, 5} {
-		rsp.EmblemDBs = append(rsp.EmblemDBs, &proto.EmblemDB{
-			Type:        proto.ParcelType_IdCardBackground,
-			UniqueId:    id,
-			ReceiveDate: time.Now(),
-			ParcelInfos: make([]*proto.ParcelInfo, 0),
 		})
 	}
 }
@@ -127,4 +99,42 @@ func NotificationEventContentReddotCheck(s *enter.Session, request, response mx.
 
 func ContentLogUIOpenStatistics(s *enter.Session, request, response mx.Message) {
 
+}
+
+func ContentSweepRequest(s *enter.Session, request, response mx.Message) {
+	req := request.(*proto.ContentSweepRequest)
+	rsp := response.(*proto.ContentSweepResponse)
+
+	rsp.ClearParcels = make([][]*proto.ParcelInfo, 0)
+	rsp.BonusParcels = make([]*proto.ParcelInfo, 0)
+	rsp.EventContentBonusParcels = make([][]*proto.ParcelInfo, 0)
+
+	switch req.Content {
+	case proto.ContentType_WeekDungeon:
+		parcelResultList, clearParcels := game.ContentSweepWeekDungeon(req.StageId, req.Count)
+		// 扣钱
+		conf := gdconf.GetWeekDungeonExcelTable(req.StageId)
+		if conf != nil && (len(conf.StageEnterCostType) == len(conf.StageEnterCostId) &&
+			len(conf.StageEnterCostId) == len(conf.StageEnterCostAmount)) {
+			for index, rewardType := range conf.StageEnterCostType {
+				parcelType := proto.ParcelType(proto.ParcelType_value[rewardType])
+				parcelResultList = append(parcelResultList, &game.ParcelResult{
+					ParcelType: parcelType,
+					ParcelId:   conf.StageEnterCostId[index],
+					Amount:     -conf.StageEnterCostAmount[index] * req.Count,
+				})
+			}
+		}
+		rsp.ParcelResult = game.ParcelResultDB(s, parcelResultList)
+		rsp.ClearParcels = clearParcels
+	case proto.ContentType_SchoolDungeon:
+		parcelResultList, clearParcels := game.ContentSweepSchoolDungeon(req.StageId, req.Count)
+		// 扣钱
+		parcelResultList = append(parcelResultList,
+			game.GetSchoolDungeonCost(true, req.Count)...)
+		rsp.ParcelResult = game.ParcelResultDB(s, parcelResultList)
+		rsp.ClearParcels = clearParcels
+	default:
+		logger.Warn("未处理的扫荡类型:%s", req.Content.String())
+	}
 }

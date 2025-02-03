@@ -1,28 +1,25 @@
 package game
 
 import (
-	"math"
 	"time"
 
 	"github.com/gucooing/BaPs/common/enter"
 	sro "github.com/gucooing/BaPs/common/server_only"
+	"github.com/gucooing/BaPs/pkg/alg"
 	"github.com/gucooing/BaPs/pkg/logger"
 )
 
-func GetDBId() int64 {
-	return 123456
+func GetServerId(s *enter.Session) int64 {
+	sw := alg.GetSnow()
+	return sw.GenId()
 }
 
-func GetServerId(s *enter.Session) int64 {
-	if s == nil ||
-		s.PlayerBin == nil {
-		return 0
-	}
-	if s.PlayerBin.ServerId == math.MaxInt64 {
-		logger.Warn("[UID:%v]玩家唯一计数器达到最大值:%v", s.AccountServerId, s.PlayerBin.ServerId)
-	}
-	s.PlayerBin.ServerId++
-	return s.PlayerBin.ServerId
+func GetServerTime() int64 {
+	return (time.Now().Add(-1*time.Hour).Unix() * 10000000) + 621356292000000000
+}
+
+func GetServerTimeTick() int64 {
+	return time.Now().Add(-1*time.Hour).UnixNano()/100 + 621356292000000000
 }
 
 func NewYostarGame(accountId int64) *sro.PlayerBin {
@@ -44,4 +41,15 @@ func GetPlayerBin(s *enter.Session) *sro.PlayerBin {
 		return nil
 	}
 	return s.PlayerBin
+}
+
+func GetRankBin(s *enter.Session) *sro.RankBin {
+	bin := GetPlayerBin(s)
+	if bin == nil {
+		return nil
+	}
+	if bin.RankBin == nil {
+		bin.RankBin = &sro.RankBin{}
+	}
+	return bin.RankBin
 }

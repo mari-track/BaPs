@@ -1,33 +1,33 @@
 package sdk
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gucooing/BaPs/common/code"
 	"github.com/gucooing/BaPs/config"
 )
 
 type SDK struct {
 	router *gin.Engine
-	code   *code.Code
 }
 
 func New(router *gin.Engine) *SDK {
 	s := &SDK{
 		router: router,
-		code:   code.NewCode(),
 	}
 
 	s.initRouter()
-	go s.code.CheckCodeTime()
 	return s
 }
 
 func (s *SDK) initRouter() {
 	s.router.Any("/", handleIndex)
 	s.router.GET("/:url.json", s.connectionGroups)
+
+	s.router.GET("/prod/index.json", index)
 
 	account := s.router.Group("/account")
 	{
@@ -39,29 +39,10 @@ func (s *SDK) initRouter() {
 		user.POST("/yostar_createlogin", s.YostarCreatelogin)
 		user.POST("/login", s.YostarLogin)
 	}
-
-	gucooingApi := s.router.Group("/gucooing/api", s.autoGucooingApi())
-	{
-		gucooingApi.GET("/ba/getEmailCode", s.getEmailCode)
-		gucooingApi.GET("/ba/getPlayerBin", s.getPlayerBin)
-	}
 }
 
 func handleIndex(c *gin.Context) {
 	c.String(http.StatusOK, "Ba Ps!")
-}
-
-func (s *SDK) autoGucooingApi() gin.HandlerFunc {
-	if config.GetGucooingApiKey() == "" {
-		return func(c *gin.Context) {}
-	} else {
-		return func(c *gin.Context) {
-			if c.GetHeader("Authorization-Gucooing") != config.GetGucooingApiKey() {
-				c.String(401, "Unauthorized")
-				c.Abort()
-			}
-		}
-	}
 }
 
 func (s *SDK) GetOuterAddr() string {
@@ -73,6 +54,9 @@ func (s *SDK) GetOuterAddr() string {
 	}
 }
 
+type ConnectionGroupS struct {
+	ConnectionGroups []*ConnectionGroup `json:"ConnectionGroups"`
+}
 type ConnectionGroup struct {
 	Name                       string                     `json:"Name"`
 	ManagementDataUrl          string                     `json:"ManagementDataUrl"`
@@ -93,34 +77,25 @@ type OverrideConnectionGroup struct {
 }
 
 func (s *SDK) connectionGroups(c *gin.Context) {
-	type ConnectionGroupS struct {
-		ConnectionGroups []*ConnectionGroup `json:"ConnectionGroups"`
+	url := c.Request.URL.String()
+	resp, err := http.Get("https://yostar-serverinfo.bluearchiveyostar.com" + url)
+	if err != nil {
+		return
 	}
-	rsp := &ConnectionGroupS{
-		ConnectionGroups: []*ConnectionGroup{},
+	defer resp.Body.Close()
+	bin, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
 	}
-	connectionGroup := &ConnectionGroup{
-		Name:                       "Prod-Audit",
-		ManagementDataUrl:          "https://prod-noticeindex.bluearchiveyostar.com/prod/index.json",
-		IsProductionAddressables:   true,
-		ApiUrl:                     fmt.Sprintf("%s/api/", s.GetOuterAddr()),
-		GatewayUrl:                 fmt.Sprintf("%s/getEnterTicket/", s.GetOuterAddr()),
-		KibanaLogUrl:               "https://prod-logcollector.bluearchiveyostar.com:5300",
-		ProhibitedWordBlackListUri: "https://prod-notice.bluearchiveyostar.com/prod/ProhibitedWord/blacklist.csv",
-		ProhibitedWordWhiteListUri: "https://prod-notice.bluearchiveyostar.com/prod/ProhibitedWord/whitelist.csv",
-		CustomerServiceUrl:         "https://bluearchive.jp/contact-1-hint",
-		OverrideConnectionGroups: []*OverrideConnectionGroup{
-			{
-				Name:                       "1.0",
-				AddressablesCatalogUrlRoot: "https://prod-clientpatch.bluearchiveyostar.com/m28_1_0_1_mashiro3",
-			},
-			{
-				Name:                       "1.52",
-				AddressablesCatalogUrlRoot: "https://prod-clientpatch.bluearchiveyostar.com/r75_49ajrpwcziy395uuk0jq_2",
-			},
-		},
-		BundleVersion: "li3pmyogha",
+	data := new(ConnectionGroupS)
+
+	if json.Unmarshal(bin, &data) != nil {
+		return
 	}
-	rsp.ConnectionGroups = append(rsp.ConnectionGroups, connectionGroup)
-	c.JSON(200, rsp)
+	for _, group := range data.ConnectionGroups {
+		group.ApiUrl = fmt.Sprintf("%s/api/", s.GetOuterAddr())
+		group.GatewayUrl = fmt.Sprintf("%s/getEnterTicket/", s.GetOuterAddr())
+	}
+
+	c.JSON(200, data)
 }

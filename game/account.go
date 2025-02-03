@@ -4,35 +4,373 @@ import (
 	"time"
 
 	"github.com/gucooing/BaPs/common/enter"
-	"github.com/gucooing/BaPs/mx/proto"
+	sro "github.com/gucooing/BaPs/common/server_only"
+	"github.com/gucooing/BaPs/gdconf"
 	"github.com/gucooing/BaPs/pkg/logger"
+	"github.com/gucooing/BaPs/pkg/mx"
+	"github.com/gucooing/BaPs/protocol/proto"
 )
 
+func GetBaseBin(s *enter.Session) *sro.BasePlayer {
+	bin := GetPlayerBin(s)
+	if bin == nil {
+		return nil
+	}
+	return bin.GetBaseBin()
+}
+
+func GetAccountLevel(s *enter.Session) int32 {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return 0
+	}
+	return bin.GetLevel()
+}
+
+func SetAccountLevel(s *enter.Session, level int32) {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return
+	}
+	if level < 0 {
+		return
+	}
+	bin.Level = level
+}
+
+func GetNickname(s *enter.Session) string {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return "hkrpg-go"
+	}
+	return bin.GetNickname()
+}
+
+func GetComment(s *enter.Session) string {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return "此服务器是免费的"
+	}
+	return bin.GetComment()
+}
+
+func SetComment(s *enter.Session, comment string) {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return
+	}
+	bin.Comment = comment
+}
+
+func GetEmblemUniqueId(s *enter.Session) int64 {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return 0
+	}
+	if bin.EmblemUniqueId == 0 {
+		return 1
+	}
+	return bin.GetEmblemUniqueId()
+}
+
+func SetEmblemUniqueId(s *enter.Session, id int64) bool {
+	bin := GetBaseBin(s)
+	list := GetEmblemInfoList(s)
+	if bin == nil || list == nil {
+		return false
+	}
+	if list[id] == nil {
+		return false
+	}
+	bin.EmblemUniqueId = id
+	return true
+}
+
+func GetRepresentCharacterUniqueId(s *enter.Session) int64 {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return 0
+	}
+	if bin.LobbyStudent == 0 {
+		return 13010
+	}
+	return bin.GetLobbyStudent()
+}
+
+func GetCardBackgroundId(s *enter.Session) int64 {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return 0
+	}
+	if bin.CardBackgroundId == 0 {
+		return 1
+	}
+	return bin.GetCardBackgroundId()
+}
+
+func SetCardBackgroundId(s *enter.Session, id int64) bool {
+	bin := GetBaseBin(s)
+	if bin == nil || GetCardBackgroundIdInfo(s, id) == nil {
+		return false
+	}
+	bin.CardBackgroundId = id
+	return true
+}
+
+func GetCardRepresentCharacterUniqueId(s *enter.Session) int64 {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return 0
+	}
+	if bin.RepresentCharacterId == 0 {
+		return 13010
+	}
+	return bin.GetRepresentCharacterId()
+}
+
+func SetCardRepresentCharacterUniqueId(s *enter.Session, characterId int64) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	bin.RepresentCharacterId = characterId
+	return true
+}
+
+func SetLobbyStudent(s *enter.Session, serverId int64) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	bin.LobbyStudent = GetCharacterInfoByServerId(s, serverId).GetCharacterId()
+	return true
+}
+
+func GetSearchPermission(s *enter.Session) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	return bin.GetSearchPermission()
+}
+
+func SetSearchPermission(s *enter.Session, is bool) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	bin.SearchPermission = is
+	return true
+}
+
+func GetShowAccountLevel(s *enter.Session) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	return bin.GetShowAccountLevel()
+}
+
+func SetShowAccountLevel(s *enter.Session, is bool) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	bin.ShowAccountLevel = is
+	return true
+}
+
+func GetShowFriendCode(s *enter.Session) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	return bin.GetShowFriendCode()
+}
+
+func SetShowFriendCode(s *enter.Session, is bool) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	bin.ShowFriendCode = is
+	return true
+}
+
+func GetShowRaidRanking(s *enter.Session) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	return bin.GetShowRaidRanking()
+}
+
+func SetShowRaidRanking(s *enter.Session, is bool) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	bin.ShowRaidRanking = is
+	return true
+}
+
+func GetShowArenaRanking(s *enter.Session) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	return bin.GetShowArenaRanking()
+}
+
+func SetShowArenaRanking(s *enter.Session, is bool) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	bin.ShowArenaRanking = is
+	return true
+}
+
+func GetShowEliminateRaidRanking(s *enter.Session) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	return bin.GetShowEliminateRaidRanking()
+}
+
+func SetShowEliminateRaidRanking(s *enter.Session, is bool) bool {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return false
+	}
+	bin.ShowEliminateRaidRanking = is
+	return true
+}
+
+func GetAccountExp(s *enter.Session) int64 {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return 0
+	}
+	return bin.Exp
+}
+
+func AddAccountExp(s *enter.Session, num int64) {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return
+	}
+	bin.Exp += num
+	newLevel, newExp := gdconf.UpAccountLevel(GetAccountLevel(s),
+		GetAccountExp(s))
+	if bin.Level < newLevel {
+		// 升级设置满级体力
+		UpCurrency(s, proto.CurrencyTypes_ActionPoint,
+			gdconf.GetAPAutoChargeMax(newLevel))
+	}
+	bin.Exp = newExp
+	bin.Level = newLevel
+}
+
+func GetLastConnectTime(s *enter.Session) mx.MxTime {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return mx.MxTime{}
+	}
+	return mx.Unix(bin.GetLastConnectTime(), 0)
+}
+
+func GetAccountDays(s *enter.Session) int32 {
+	bin := GetBaseBin(s)
+	if bin == nil {
+		return 0
+	}
+	return bin.Days
+}
+
 func GetAccountDB(s *enter.Session) *proto.AccountDB {
-	baseBin := s.PlayerBin.GetBaseBin()
-	if baseBin == nil {
-		logger.Error("AccountId:%v,账号数据损坏", s.AccountServerId)
+	baseBin := GetBaseBin(s)
+	if s == nil || baseBin == nil {
+		logger.Error("账号数据损坏")
 		return nil
 	}
 	info := &proto.AccountDB{
-		ServerId:        baseBin.GetAccountId(),
-		Nickname:        baseBin.GetNickname(),
-		Level:           baseBin.GetLevel(),
-		LastConnectTime: time.Unix(baseBin.GetLastConnectTime(), 0),
-		CreateDate:      time.Unix(baseBin.GetCreateDate(), 0),
-		VIPLevel:        1,
-		State:           s.AccountState,
-
-		RepresentCharacterServerId: 1,
-		PublisherAccountId:         1,
-		RetentionDays:              1,
+		ServerId:                   baseBin.GetAccountId(),
+		Nickname:                   GetNickname(s),
+		Level:                      GetAccountLevel(s),
+		Exp:                        GetAccountExp(s),
+		LastConnectTime:            GetLastConnectTime(s),
+		CreateDate:                 time.Unix(baseBin.GetCreateDate(), 0),
+		VIPLevel:                   10,
+		State:                      s.AccountState,
+		Comment:                    GetComment(s),
+		RepresentCharacterServerId: GetCharacterServerId(s, GetRepresentCharacterUniqueId(s)),
+		PublisherAccountId:         s.YostarUID,
+		RetentionDays:              0,
 	}
 
 	return info
 }
 
 func GetAttendanceBookRewards(s *enter.Session) []*proto.AttendanceBookReward {
-	return make([]*proto.AttendanceBookReward, 0)
+	list := make([]*proto.AttendanceBookReward, 0)
+	// info := &proto.AttendanceBookReward{
+	// 	UniqueId:       1,
+	// 	AccountType:    proto.AccountState_Normal,
+	// 	BookSize:       10,
+	// 	MailType:       proto.MailType_Attendance,
+	// 	Title:          "ATTENDANCEBOOK_NORMAL",
+	// 	TitleImagePath: "Uis/01_Common/33_Attendance/ImageFont_Attend_1",
+	// 	DailyRewards:   make(map[int64][]*proto.ParcelInfo),
+	//
+	// 	StartDate:        "2020-11-01T00:00:00",
+	// 	StartableEndDate: "2025-12-31T04:00:00",
+	// 	EndDate:          "2025-12-31T04:00:00",
+	//
+	// 	DisplayOrder:      0,
+	// 	AccountLevelLimit: 0,
+	// 	Type:              0,
+	// 	CountRule:         0,
+	// 	CountReset:        0,
+	// 	ExpiryDate:        0,
+	// 	DailyRewardIcons:  make(map[int64]string),
+	// }
+	//
+	// for _, id := range []int64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10} {
+	// 	reward := []*proto.ParcelInfo{
+	// 		{
+	// 			Key: &proto.ParcelKeyPair{
+	// 				Type: proto.ParcelType_Currency,
+	// 				Id:   1,
+	// 			},
+	// 			Amount: 999,
+	// 			Multiplier: &proto.BasisPoint{
+	// 				RawValue: 10000,
+	// 			},
+	// 			Probability: &proto.BasisPoint{
+	// 				RawValue: 10000,
+	// 			},
+	// 		},
+	// 	}
+	// 	info.DailyRewards[id] = reward
+	// }
+	//
+	// list = append(list, info)
+	return list
+}
+
+func GetAttendanceHistoryDBs(s *enter.Session) []*proto.AttendanceHistoryDB {
+	list := make([]*proto.AttendanceHistoryDB, 0)
+	// info := &proto.AttendanceHistoryDB{
+	// 	ServerId:               1,
+	// 	AccountServerId:        s.AccountServerId,
+	// 	AttendanceBookUniqueId: 1,
+	// 	AttendedDay:            make(map[int64]*time.Time),
+	// 	Expired:                false,
+	// }
+	// list = append(list, info)
+	return list
 }
 
 func SetAccountNickname(s *enter.Session, nickname string) bool {

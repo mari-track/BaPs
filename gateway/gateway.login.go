@@ -7,19 +7,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/BaPs/common/enter"
-	sro "github.com/gucooing/BaPs/common/server_only"
 	"github.com/gucooing/BaPs/db"
 	"github.com/gucooing/BaPs/game"
-	"github.com/gucooing/BaPs/mx"
-	"github.com/gucooing/BaPs/mx/proto"
 	"github.com/gucooing/BaPs/pkg/alg"
 	"github.com/gucooing/BaPs/pkg/logger"
+	"github.com/gucooing/BaPs/pkg/mx"
+	"github.com/gucooing/BaPs/protocol/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
 func (g *Gateway) getEnterTicket(c *gin.Context) {
 	if !alg.CheckGateWay(c) {
-		errBestHTTP(c)
+		errTokenBestHTTP(c)
 		return
 	}
 	bin, err := mx.GetFormMx(c)
@@ -46,8 +45,8 @@ func (g *Gateway) getEnterTicket(c *gin.Context) {
 	if err = db.UpdateYoStarUserLogin(yoStarUserLogin); err != nil {
 		return
 	}
-	enterTicket := fmt.Sprintf("%v%s", g.snow.GenId(), alg.RandStr(10))
-	if !enter.AddEnterTicket(yoStarUserLogin.AccountServerId, enterTicket) {
+	enterTicket := fmt.Sprintf("%v%s", alg.GetSnow().GenId(), alg.RandStr(10))
+	if !enter.AddEnterTicket(yoStarUserLogin.AccountServerId, req.YostarUID, enterTicket) {
 		return
 	}
 	rsp.EnterTicket = enterTicket
@@ -70,7 +69,7 @@ func (g *Gateway) AccountCheckYostar(s *enter.Session, request, response mx.Mess
 	}
 	enter.DelEnterTicket(req.EnterTicket)
 	s = enter.GetSessionByAccountServerId(tickInfo.AccountServerId)
-	mxToken := fmt.Sprintf("%v%s", g.snow.GenId(), alg.RandStr(30))
+	mxToken := fmt.Sprintf("%v%s", alg.GetSnow().GenId(), alg.RandStr(30))
 	if s == nil {
 		yostarGame := db.GetYostarGameByAccountServerId(tickInfo.AccountServerId)
 		if yostarGame == nil {
@@ -81,10 +80,8 @@ func (g *Gateway) AccountCheckYostar(s *enter.Session, request, response mx.Mess
 				return
 			}
 		}
-		s = &enter.Session{
-			AccountServerId: tickInfo.AccountServerId,
-			PlayerBin:       new(sro.PlayerBin),
-		}
+		s = enter.NewSession(tickInfo.AccountServerId)
+		s.YostarUID = tickInfo.YostarUID
 		if yostarGame.BinData != nil {
 			pb.Unmarshal(yostarGame.BinData, s.PlayerBin)
 		} else {
@@ -94,9 +91,11 @@ func (g *Gateway) AccountCheckYostar(s *enter.Session, request, response mx.Mess
 	}
 	// 更新一次账号缓存
 	s.MxToken = mxToken
-	s.EndTime = time.Now().Add(30 * time.Minute)
+	s.EndTime = time.Now().Add(time.Duration(enter.MaxCachePlayerTime) * time.Minute)
 	if !enter.AddSession(s) {
-		logger.Debug("AccountServerId:%v,重复上线账号", tickInfo.AccountServerId)
+		logger.Info("AccountServerId:%v,重复上线账号,如果老客户端在线则会被离线", tickInfo.AccountServerId)
+	} else {
+		logger.Info("AccountServerId:%v,上线账号", tickInfo.AccountServerId)
 	}
 	rsp.ResultState = 1
 	base := &mx.BasePacket{
@@ -104,8 +103,10 @@ func (g *Gateway) AccountCheckYostar(s *enter.Session, request, response mx.Mess
 			AccountServerId: tickInfo.AccountServerId,
 			MxToken:         s.MxToken,
 		},
-		Protocol:  response.GetProtocol(),
-		AccountId: tickInfo.AccountServerId,
+		Protocol:           response.GetProtocol(),
+		AccountId:          tickInfo.AccountServerId,
+		ServerNotification: game.GetServerNotification(s),
+		ServerTimeTicks:    game.GetServerTime(),
 	}
 	response.SetSessionKey(base)
 }

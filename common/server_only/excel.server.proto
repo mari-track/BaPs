@@ -14,6 +14,46 @@ message Excel {
   repeated DefaultEchelonExcelTable DefaultEchelonExcelTable = 5; // 默认队伍
   repeated ShopExcelTable ShopExcelTable = 6; // 商店数据
   repeated ShopInfoExcelTable ShopInfoExcelTable = 7; // 商店配置
+  repeated ItemExcelTable ItemExcelTable = 8; // 物品配置
+  repeated EmblemExcel EmblemExcel = 9; // 称号配置
+  repeated AcademyFavorScheduleExcelTable AcademyFavorScheduleExcelTable = 10; // MomoTalk剧情配置
+  repeated AcademyMessangerExcelTable AcademyMessangerExcelTable = 11; // MomoTalk对话配置
+  repeated GuideMissionExcelTable GuideMissionExcelTable = 12; // 成就配置
+  repeated ScenarioModeExcel ScenarioModeExcel = 13; // 剧情配置
+  repeated ScenarioModeRewardExcel ScenarioModeRewardExcel = 14; // 剧情奖励配置
+  repeated CharacterWeaponExcelTable CharacterWeaponExcelTable = 15; // 角色武器配置
+  repeated CharacterSkillListExcelTable CharacterSkillListExcelTable = 16; // 角色技能配置表
+  repeated SkillExcelTable SkillExcelTable = 17; // 全部技能配置
+  repeated RecipeIngredientExcelTable RecipeIngredientExcelTable = 18; // 材料配置
+  repeated CampaignStageExcelTable CampaignStageExcelTable = 19; // 任务关卡信息配置
+  repeated CampaignUnitExcelTable CampaignUnitExcelTable = 20; // 任务关卡怪物信息
+  repeated WeekDungeonExcelTable WeekDungeonExcelTable = 21; // 悬赏通缉关卡信息
+  repeated SchoolDungeonStageExcel SchoolDungeonStageExcel = 22; // 学院交流会关卡信息
+  repeated AccountLevelExcel AccountLevelExcel = 23; // 账号等级配置
+  repeated EquipmentExcelTable EquipmentExcelTable = 24; // 装备配置表
+  repeated EquipmentStatExcelTable EquipmentStatExcelTable = 25; // 装备详情表
+  repeated EquipmentLevelExcelTable EquipmentLevelExcelTable = 26; // 装备等级配置
+  repeated FurnitureExcelTable FurnitureExcelTable = 27; // 家具配置
+  repeated CafeRankExcelTable CafeRankExcelTable = 28; // 咖啡厅等级配置
+  repeated CafeProductionExcelTable CafeProductionExcelTable = 29; // 咖啡厅生产配置
+  repeated IdCardBackgroundExcel IdCardBackgroundExcel = 30; // 账号背景配置
+  repeated WeekDungeonRewardExcelTable WeekDungeonRewardExcelTable = 31; // 悬赏通缉关卡奖励配置
+  repeated CharacterLevelExcelTable CharacterLevelExcelTable = 32; // 角色等级配置
+  repeated CharacterGearExcel CharacterGearExcel = 33; // 角色爱用品配置
+  repeated CharacterPotentialExcel CharacterPotentialExcel = 34; // 角色能力解放配置
+  repeated CharacterPotentialStatExcel CharacterPotentialStatExcel = 35; // 角色能力解放升级配置
+  repeated AcademyTicketExcelTable AcademyTicketExcelTable = 36; // 课程表最大票信息
+  repeated AcademyLocationExcelTable AcademyLocationExcelTable = 37; // 课程表学院信息
+  repeated AcademyZoneExcelTable AcademyZoneExcelTable = 38; // 课程表教室信息
+  repeated AcademyLocationRankExcelTable AcademyLocationRankExcelTable = 39; // 课程表等级配置
+  repeated AcademyRewardExcelTable AcademyRewardExcelTable = 40; // 课程表奖励配置
+  repeated SchoolDungeonRewardExcel SchoolDungeonRewardExcel = 41; // 学院交流会奖励配置
+  repeated RaidSeasonManageExcelTable RaidSeasonManageExcelTable = 42; // 总力战赛季配置
+  repeated RaidRankingRewardExcelTable RaidRankingRewardExcelTable = 43; // 总力战结算奖励配置
+  repeated RaidStageExcelTable RaidStageExcelTable = 44; // 总力战关卡配置
+  repeated CharacterStatExcelTable CharacterStatExcelTable = 45; // 实体属性配置
+  repeated RaidStageRewardExcelTable RaidStageRewardExcelTable = 46; // 总力战关卡通过奖励配置
+  repeated MissionExcelTable MissionExcelTable = 47; // 任务配置
 }
 
 message CafeInfoExcelTableInfo {
@@ -80,6 +120,8 @@ message DefaultEchelonExcelTable{
   repeated int64 MainId = 3;
   repeated int64 SupportId = 4;
   int64 TssId = 5;
+  repeated int64 SkillId = 6;
+  int32 ExtensionType = 7;
 }
 
 message ShopExcelTable {
@@ -129,4 +171,769 @@ message ShopInfoExcelTable {
   int64 ShopUpdateGroupId10 = 26;
   int64 ShopUpdateGroupId11 = 27;
   int64 ShopUpdateGroupId12 = 28;
+}
+
+message ItemExcelTable {
+  int64 Id = 1;
+  int64 GroupId = 2;
+  string Rarity_ = 3;
+  string ProductionStep_ = 4;
+  int64 LocalizeEtcId = 5;
+  string ItemCategory_ = 6;
+  int64 Quality = 7;
+  string Icon = 8;
+  string SpriteName = 9;
+  int64 StackableMax = 10;
+  int64 StackableFunction = 11;
+  bool ImmediateUse = 12;
+  string UsingResultParcelType = 13;
+  int64 UsingResultId = 14;
+  int64 UsingResultAmount = 15;
+  string MailType_ = 16;
+  string ExpiryChangeParcelType = 17;
+  int64 ExpiryChangeId = 18;
+  int64 ExpiryChangeAmount = 19;
+  bool CanTierUpgrade = 20;
+  int64 TierUpgradeRecipeCraftId = 21;
+  repeated string Tags = 22;
+  int64 CraftQualityTier0 = 23;
+  int64 CraftQualityTier1 = 24;
+  int64 CraftQualityTier2 = 25;
+  int64 ShiftingCraftQuality = 26;
+  int64 MaxGiftTags = 27;
+  repeated string ShopCategory = 28;
+  string ExpirationDateTime = 29;
+  int64 ExpirationNotifyDateIn = 30;
+  int64 ShortcutTypeId = 31;
+  string GachaTicket = 32;
+}
+
+message EmblemExcel {
+  int64 Id = 1;
+  string Category = 2;
+  string Rarity = 3;
+  int64 DisplayOrder = 4;
+  int64 LocalizeEtcId = 5;
+  int64 LocalizeCodeId = 6;
+  int64 UseAtLocalizeId = 7;
+  bool EmblemTextVisible = 8;
+  string IconPath = 9;
+  string EmblemIconPath = 10;
+  int64 EmblemIconNumControl = 11;
+  string EmblemIconBGPath = 12;
+  string EmblemBGPathJp = 13;
+  string EmblemBGPathKr = 14;
+  string DisplayType = 15;
+  string DisplayStartDate = 16;
+  string DisplayEndDate = 17;
+  int64 DislpayFavorLevel = 18;
+  string CheckPassType = 19;
+  int64 EmblemParameter = 20;
+  int64 CheckPassCount = 21;
+}
+
+message AcademyFavorScheduleExcelTable {
+  int64 Id = 1;
+  int64 CharacterId = 2;
+  int64 ScheduleGroupId = 3;
+  int64 OrderInGroup = 4;
+  int64 LocalizeScenarioId = 5;
+  int64 FavorRank = 6;
+  int64 SecretStoneAmount = 7;
+  int64 ScenarioSriptGroupId = 8;
+  repeated string RewardParcelType = 9;
+  repeated int64 RewardParcelId = 10;
+  repeated int64 RewardAmount = 11;
+}
+
+message AcademyMessangerExcelTable {
+  int64 MessageGroupId = 1;
+  int64 Id = 2;
+  int64 CharacterId = 3;
+  string MessageCondition = 4;
+  int64 ConditionValue = 5;
+  int64 PreConditionGroupId = 6;
+  int64 PreConditionFavorScheduleId = 7;
+  int64 FavorScheduleId = 8;
+  int64 NextGroupId = 9;
+  int64 FeedbackTimeMillisec = 10;
+}
+
+message GuideMissionExcelTable {
+  int64 SeasonId = 1;
+  int64 Id = 2;
+  string Category = 3;
+  bool IsLegacy = 4;
+  int64 TabNumber = 5;
+  int64 Description = 6;
+  string ToastDisplayType = 7;
+  string ToastImagePath = 8;
+  string CompleteConditionType = 9;
+  int64 CompleteConditionCount = 10;
+  repeated int64 CompleteConditionParameter = 11;
+  repeated string CompleteConditionParameterTag = 12;
+  bool IsAutoClearForScenario = 13;
+  repeated string MissionRewardParcelType = 14;
+  repeated int64 MissionRewardParcelId = 15;
+  repeated int64 MissionRewardAmount = 16;
+}
+
+message ScenarioModeExcel {
+  int64 ModeId = 2;
+  string ModeType = 3;
+  string SubType = 4;
+  int64 VolumeId = 5;
+  int64 ChapterId = 6;
+  int64 EpisodeId = 7;
+  string ExposedTime = 8;
+  bool Hide = 9;
+  bool Open = 10;
+  bool IsContinue = 11;
+  int64 EpisodeContinueModeId = 12;
+  int64 FrontScenarioGroupIdLength = 13;
+  int64 StrategyId = 14;
+  int64 GroundId = 15;
+  bool IsDefeatBattle = 16;
+  int64 BattleDuration = 17;
+  int64 BackScenarioGroupIdLength = 18;
+  int64 ClearedModeIdLength = 19;
+  int64 ScenarioModeRewardId = 20;
+  bool IsScenarioSpecialReward = 21;
+  int64 AccountLevelLimit = 22;
+  int64 ClearedStageId = 23;
+  string NeedClub = 24;
+  int64 NeedClubStudentCount = 25;
+  int64 EventContentId = 26;
+  string EventContentType = 27;
+  int64 EventContentCondition = 28;
+  int64 EventContentConditionGroup = 29;
+  string MapDifficulty = 30;
+  int64 StepIndex = 31;
+  int64 RecommendLevel = 32;
+  string EventIconParcelPath = 33;
+  int64 EventBannerTitle = 34;
+  bool Lof = 35;
+  string StageTopography = 36;
+  int64 FixedEchelonId = 37;
+  string CompleteReportEventName = 38;
+  string EchelonExtensionType = 39;
+  int64 CollectionGroupId = 40;
+}
+
+message ScenarioModeRewardExcel {
+  int64 ScenarioModeRewardId = 1;
+  string RewardTag = 2;
+  int64 RewardProb = 3;
+  string RewardParcelType = 4;
+  int64 RewardParcelId = 5;
+  int64 RewardParcelAmount = 6;
+  bool IsDisplayed = 7;
+}
+
+message CharacterWeaponExcelTable {
+  int64 Id = 1;
+  string ImagePath = 2;
+  int64 SetRecipe = 3;
+  string StatLevelUpType = 4;
+  int64 AttackPower = 5;
+  int64 AttackPower100 = 6;
+  int64 MaxHP = 7;
+  int64 MaxHP100 = 8;
+  int64 HealPower = 9;
+  int64 HealPower100 = 10;
+  repeated bool Unlock = 11;
+  repeated int64 RecipeId = 12;
+  repeated int64 MaxLevel = 13;
+  repeated string LearnSkillSlot = 14;
+  repeated string StatType = 15;
+  repeated int64 StatValue = 16;
+}
+
+message CharacterSkillListExcelTable {
+  int64 CharacterSkillListGroupId = 1;
+  int32 MinimumGradeCharacterWeapon = 2;
+  int64 MinimumTierCharacterGear = 3;
+  int64 FormIndex = 4;
+  bool IsRootMotion = 5;
+  bool IsMoveLeftRight = 6;
+  bool UseRandomExSkillTimeline = 7;
+  int64 TSAInteractionId = 8;
+  repeated string NormalSkillGroupId = 9;
+  repeated int64 NormalSkillTimeLineIndex = 10;
+  repeated string ExSkillGroupId = 11;
+  repeated string ExSkillCutInTimeLineIndex = 12;
+  repeated string ExSkillLevelTimeLineIndex = 13;
+  repeated string PublicSkillGroupId = 14;
+  repeated int64 PublicSkillTimeLineIndex = 15;
+  repeated string PassiveSkillGroupId = 16;
+  repeated int64 LeaderSkillGroupId = 17;
+  repeated string ExtraPassiveSkillGroupId = 18;
+  repeated string HiddenPassiveSkillGroupId = 19;
+}
+
+message SkillExcelTable {
+  int64 Id = 1;
+  int64 LocalizeSkillId = 2;
+  string GroupId = 3;
+  string SkillDataKey = 4;
+  string VisualDataKey = 5;
+  int32 Level = 6;
+  int64 SkillCost = 7;
+  int64 ExtraSkillCost = 8;
+  int64 EnemySkillCost = 9;
+  int64 ExtraEnemySkillCost = 10;
+  int64 NPCSkillCost = 11;
+  int64 ExtraNPCSkillCost = 12;
+  string BulletType = 13;
+  int64 StartCoolTime = 14;
+  int64 CoolTime = 15;
+  int64 EnemyStartCoolTime = 16;
+  int64 EnemyCoolTime = 17;
+  int64 NPCStartCoolTime = 18;
+  int64 NPCCoolTime = 19;
+  int64 UseAtg = 20;
+  int64 RequireCharacterLevel = 21;
+  int64 RequireLevelUpMaterial = 22;
+  string IconName = 23;
+  bool IsShowInfo = 24;
+  bool IsShowSpeechbubble = 25;
+  int64 PublicSpeechDuration = 26;
+  int64 AdditionalToolTipId = 27;
+  string TextureSkillCardForFormConversion = 28;
+  string SkillCardLabelPath = 29;
+}
+
+message RecipeIngredientExcelTable {
+  int64 Id = 1;
+  string RecipeType_ = 2;
+  repeated string CostParcelType = 3;
+  repeated int64 CostId = 4;
+  repeated int64 CostAmount = 5;
+  repeated string IngredientParcelType = 6;
+  repeated int64 IngredientId = 7;
+  repeated int64 IngredientAmount = 8;
+  int64 CostTimeInSecond = 9;
+}
+
+message CampaignStageExcelTable {
+  int64 Id = 1;
+  bool Deprecated = 2;
+  string Name = 3;
+  string StageNumber = 4;
+  int64 CleardScenarioId = 5;
+  int64 BattleDuration = 6;
+  string StageEnterCostType = 7;
+  int64 StageEnterCostId = 8;
+  int64 StageEnterCostAmount = 9;
+  int64 StageEnterEchelonCount = 10;
+  int64 StarConditionTacticRankSCount = 11;
+  int64 StarConditionTurnCount = 12;
+  repeated string EnterScenarioGroupId = 13;
+  repeated string ClearScenarioGroupId = 14;
+  string StrategyMap = 15;
+  string StrategyMapBG = 16;
+  int64 CampaignStageRewardId = 17;
+  int64 MaxTurn = 18;
+  string StageTopography = 19;
+  int64 RecommandLevel = 20;
+  string StrategyEnvironment = 22;
+  int64 GroundId = 23;
+  int64 StrategySkipGroundId = 24;
+  string ContentType = 25;
+  string FirstClearReportEventName = 27;
+  int64 TacticRewardExp = 28;
+  int64 FixedEchelonId = 29;
+  string EchelonExtensionType = 30;
+}
+
+message CampaignUnitExcelTable {
+  int64 Id = 1;
+  int64 Key = 2;
+  string Name = 3;
+  string PrefabName = 4;
+  string StrategyPrefabName = 5;
+  repeated string EnterScenarioGroupId = 6;
+  repeated string ClearScenarioGroupId = 7;
+  int64 GroundId = 8;
+  int64 MoveRange = 9;
+  string AIMoveType = 10;
+  string Grade = 11;
+  string EnvironmentType = 12;
+  double Scale = 13;
+  bool IsTacticSkip = 14;
+}
+
+message WeekDungeonExcelTable {
+  int64 StageId = 1;
+  string WeekDungeonType = 2;
+  int64 Difficulty = 3;
+  int64 BattleDuration = 4;
+  int64 PrevStageId = 5;
+  repeated string StageEnterCostType = 6;
+  repeated int64 StageEnterCostId = 7;
+  repeated int64 StageEnterCostAmount = 8;
+  int64 GroundId = 9;
+  repeated string StarGoal = 10;
+  repeated double StarGoalAmount = 11;
+  string StageTopography = 12;
+  int64 RecommandLevel = 13;
+  int64 StageRewardId = 14;
+  int64 PlayTimeLimitInSeconds = 15;
+  int64 BattleRewardExp = 16;
+  int64 BattleRewardPlayerExp = 17;
+  repeated int64 GroupBuffID = 18;
+  string EchelonExtensionType = 19;
+}
+
+message SchoolDungeonStageExcel {
+  int64 StageId = 1;
+  string DungeonType = 2;
+  int64 Difficulty = 3;
+  int64 BattleDuration = 4;
+  int64 PrevStageId = 5;
+  int64 StageEnterCostTypeLength = 6;
+  int64 StageEnterCostIdLength = 7;
+  int64 StageEnterCostAmountLength = 8;
+  int64 StageEnterCostMinimumAmountLength = 9;
+  int64 GroundId = 10;
+  int64 StarGoalLength = 11;
+  int64 StarGoalAmountLength = 12;
+  string StageTopography = 13;
+  int64 RecommandLevel = 14;
+  int64 StageRewardId = 15;
+  int64 PlayTimeLimitInSeconds = 16;
+  string EchelonExtensionType = 17;
+}
+
+message AccountLevelExcel {
+  int64 Id = 1;
+  int32 Level = 2;
+  int64 Exp = 3;
+  int64 APAutoChargeMax = 4;
+  bool NeedReportEvent = 5;
+}
+
+message EquipmentExcelTable {
+  int64 Id = 1;
+  string EquipmentCategory_ = 2;
+  string Rarity_ = 3;
+  int64 LocalizeEtcId = 4;
+  bool Wear = 5;
+  int32 MaxLevel = 6;
+  int64 RecipeId = 7;
+  int32 TierInit = 8;
+  int64 NextTierEquipment = 9;
+  int64 StackableMax = 10;
+  string Icon = 11;
+  string ImageName = 12;
+  repeated string Tags = 13;
+  int64 CraftQualityTier0 = 14;
+  int64 CraftQualityTier1 = 15;
+  int64 CraftQualityTier2 = 16;
+  int64 ShiftingCraftQuality = 17;
+  repeated string ShopCategory = 18;
+  int64 ShortcutTypeId = 19;
+}
+
+message EquipmentStatExcelTable {
+  int64 EquipmentId = 1;
+  string StatLevelUpType_ = 2;
+  repeated string StatType = 3;
+  repeated int64 MinStat = 4;
+  repeated int64 MaxStat = 5;
+  int64 LevelUpInsertLimit = 6;
+  int64 LevelUpFeedExp = 7;
+  string LevelUpFeedCostCurrency = 8;
+  int64 LevelUpFeedCostAmount = 9;
+  string EquipmentCategory_ = 10;
+  int64 LevelUpFeedAddExp = 11;
+  int64 DefaultMaxLevel = 12;
+  int64 TranscendenceMax = 13;
+  string DamageFactorGroupId = 14;
+}
+
+message EquipmentLevelExcelTable {
+  int32 Level = 1;
+  repeated int64 TierLevelExp = 2;
+  repeated int64 TotalExp = 3;
+}
+
+message FurnitureExcelTable {
+  int64 Id = 1;
+  string ProductionStep_ = 2;
+  string Rarity_ = 3;
+  string Category = 4;
+  string SubCategory = 5;
+  int64 LocalizeEtcId = 6;
+  int64 StarGradeInit = 7;
+  int64 Tier = 8;
+  string Icon = 9;
+  int64 SizeWidth = 10;
+  int64 SizeHeight = 11;
+  int64 OtherSize = 12;
+  int64 ExpandWidth = 13;
+  bool Enable = 14;
+  bool ReverseRotation = 15;
+  string Prefab = 16;
+  string PrefabExpand = 17;
+  string SubPrefab = 18;
+  string SubExpandPrefab = 19;
+  string CornerPrefab = 20;
+  int64 StackableMax = 21;
+  int64 RecipeCraftId = 22;
+  int64 SetGroudpId = 23;
+  int64 ComfortBonus = 24;
+  int64 VisitOperationType = 25;
+  int64 VisitBonusOperationType = 26;
+  repeated string Tags = 27;
+  int64 CraftQualityTier0 = 28;
+  int64 CraftQualityTier1 = 29;
+  int64 CraftQualityTier2 = 30;
+  int64 ShiftingCraftQuality = 31;
+  string FurnitureFunctionType_ = 32;
+  repeated int64 FurnitureFunctionParameter = 33;
+  int64 VideoId = 34;
+  int64 EventCollectionId = 35;
+  int64 FurnitureBubbleOffsetX = 36;
+  int64 FurnitureBubbleOffsetY = 37;
+  repeated string CafeCharacterStateReq = 38;
+  repeated string CafeCharacterStateAdd = 39;
+  repeated string CafeCharacterStateMake = 40;
+  repeated string CafeCharacterStateOnly = 41;
+}
+
+message CafeRankExcelTable {
+  int64 CafeId = 1;
+  int32 Rank = 2;
+  int64 RecipeId = 3;
+  int64 ComfortMax = 4;
+  int64 TagCountMax = 5;
+  int32 CharacterVisitMin = 6;
+  int32 CharacterVisitMax = 7;
+  int64 CafeVisitWeightBase = 8;
+  repeated int64 CafeVisitWeightTagBonusStep = 9;
+  repeated int64 CafeVisitWeightTagBonus = 10;
+}
+
+message CafeProductionExcelTable {
+  int64 CafeId = 1;
+  int32 Rank = 2;
+  string CafeProductionParcelType = 3;
+  int64 CafeProductionParcelId = 4;
+  float ParcelProductionCoefficient = 5;
+  float ParcelProductionCorrectionValue = 6;
+  int64 ParcelStorageMax = 7;
+}
+
+message IdCardBackgroundExcel {
+  int64 Id = 1;
+  string Rarity = 2;
+  int64 DisplayOrder = 3;
+  bool CollectionVisible = 4;
+  bool IsDefault = 5;
+  string BgPath = 6;
+  int64 LocalizeEtcId = 7;
+  string Icon = 8;
+}
+
+message WeekDungeonRewardExcelTable{
+  int64 GroupId = 1;
+  string DungeonType = 2;
+  string RewardParcelType = 3;
+  int64 RewardParcelId = 4;
+  int64 RewardParcelAmount = 5;
+  int64 RewardParcelProbability = 6;
+  bool IsDisplayed = 7;
+  string DropItemModelPrefabPath = 8;
+}
+
+message CharacterLevelExcelTable {
+  int32 Level = 1;
+  int64 Exp = 2;
+  int64 TotalExp = 3;
+}
+
+message CharacterGearExcel {
+  int64 Id = 1;
+  int64 CharacterId = 2;
+  string StatLevelUpType = 3;
+  int32 Tier = 4;
+  int64 NextTierEquipment = 5;
+  int64 RecipeId = 6;
+  int64 OpenFavorLevel = 7;
+  int64 MaxLevel = 8;
+  string LearnSkillSlot = 9;
+  int64 StatTypeLength = 10;
+  int64 MinStatValueLength = 11;
+  int64 MaxStatValueLength = 12;
+  string Icon = 13;
+  int64 LocalizeEtcId = 14;
+  int64 TagsLength = 15;
+}
+
+message CharacterPotentialExcel {
+  int64 Id = 1;
+  int64 PotentialStatGroupId = 2;
+  string PotentialStatBonusRateType = 3;
+  bool IsUnnecessaryStat = 4;
+}
+
+message CharacterPotentialStatExcel {
+  int64 PotentialStatGroupId = 1;
+  int32 PotentialLevel = 2;
+  int64 RecipeId = 3;
+  int64 StatBonusRate = 4;
+}
+
+message AcademyTicketExcelTable {
+  int64 LocationRankSum = 1;
+  int64 ScheduleTicktetMax = 2;
+}
+
+message AcademyLocationExcelTable {
+  int64 Id = 1;
+  int64 LocalizeEtcId = 2;
+  repeated string OpenCondition = 3;
+  repeated int64 OpenConditionCount = 4;
+  string RewardParcelType = 5;
+  int64 RewardParcelId = 6;
+  int64 OpenTeacherRank = 7;
+}
+
+message AcademyZoneExcelTable {
+  int64 Id = 1;
+  int64 LocationId = 2;
+  int64 LocationRankForUnlock = 3;
+  int64 LocalizeEtcId = 4;
+  repeated int64 StudentVisitProb = 5;
+  int64 RewardGroupId = 6;
+  repeated string Tags = 7;
+}
+
+message AcademyLocationRankExcelTable {
+  int64 Rank = 1;
+  int64 RankExp = 2;
+  int64 TotalExp = 3;
+}
+
+message AcademyRewardExcelTable {
+  string Location = 1;
+  int64 ScheduleGroupId = 2;
+  int64 OrderInGroup = 3;
+  int64 Id = 4;
+  string ProgressTexture = 5;
+  int64 LocalizeEtcId = 6;
+  int64 LocationRank = 7;
+  int64 FavorExp = 8;
+  int64 SecretStoneAmount = 9;
+  int64 SecretStoneProb = 10;
+  int64 ExtraFavorExp = 11;
+  int64 ExtraFavorExpProb = 12;
+  repeated string ExtraRewardParcelType = 13;
+  repeated int64 ExtraRewardParcelId = 14;
+  repeated int64 ExtraRewardAmount = 15;
+  repeated int64 ExtraRewardProb = 16;
+  repeated bool IsExtraRewardDisplayed = 17;
+  repeated string RewardParcelType = 18;
+  repeated int64 RewardParcelId = 19;
+  repeated int64 RewardAmount = 20;
+}
+
+message SchoolDungeonRewardExcel {
+  int64 GroupId = 1;
+  string DungeonType = 2;
+  string RewardTag = 3;
+  string RewardParcelType = 4;
+  int64 RewardParcelId = 5;
+  int64 RewardParcelAmount = 6;
+  int64 RewardParcelProbability = 7;
+  bool IsDisplayed = 8;
+}
+
+message RaidSeasonManageExcelTable {
+  int64 SeasonId = 1;
+  int64 SeasonDisplay = 2;
+  string SeasonStartData = 3;
+  string SeasonEndData = 4;
+  string SettlementEndDate = 5;
+  repeated string OpenRaidBossGroup = 6;
+  int64 RankingRewardGroupId = 7;
+  int64 MaxSeasonRewardGauage = 8;
+  repeated int64 StackedSeasonRewardGauge = 9;
+  repeated int64 SeasonRewardId = 10;
+}
+
+message RaidRankingRewardExcelTable {
+  int64 RankingRewardGroupId = 1;
+  int64 Id = 2;
+  int64 RankStart = 3;
+  int64 RankEnd = 4;
+  int64 PercentRankStart = 5;
+  int64 PercentRankEnd = 6;
+  int32 Tier = 7;
+  repeated string RewardParcelType = 8;
+  repeated int64 RewardParcelUniqueId = 9;
+  repeated string RewardParcelUniqueName = 10;
+  repeated int64 RewardParcelAmount = 11;
+}
+
+message RaidStageExcelTable {
+  int64 Id = 1;
+  bool UseBossIndex = 2;
+  bool UseBossAIPhaseSync = 3;
+  string RaidBossGroup = 4;
+  string PortraitPath = 5;
+  string BGPath = 6;
+  int64 RaidCharacterId = 7;
+  repeated int64 BossCharacterId = 8;
+  string Difficulty = 9;
+  bool DifficultyOpenCondition = 10;
+  int64 MaxPlayerCount = 11;
+  int64 RaidRoomLifeTime = 12;
+  int64 BattleDuration = 13;
+  int64 GroundId = 14;
+  string GroundDevName = 15;
+  string EnterTimeLine = 16;
+  string TacticEnvironment = 17;
+  int64 DefaultClearScore = 18;
+  int64 MaximumScore = 19;
+  int64 PerSecondMinusScore = 20;
+  int64 HPPercentScore = 21;
+  int64 MinimumAcquisitionScore = 22;
+  int64 MaximumAcquisitionScore = 23;
+  int64 RaidRewardGroupId = 24;
+  repeated string BattleReadyTimelinePath = 25;
+  repeated int64 BattleReadyTimelinePhaseStart = 26;
+  repeated int64 BattleReadyTimelinePhaseEnd = 27;
+  string VictoryTimelinePath = 28;
+  string PhaseChangeTimelinePath = 29;
+  int64 TimeLinePhase = 30;
+  int64 EnterScenarioKey = 31;
+  int64 ClearScenarioKey = 32;
+  bool ShowSkillCard = 33;
+  int64 BossBGInfoKey = 34;
+  string EchelonExtensionType = 35;
+}
+
+message CharacterStatExcelTable {
+  int64 CharacterId = 1;
+  int64 StabilityRate = 2;
+  int64 StabilityPoint = 3;
+  int64 AttackPower1 = 4;
+  int64 AttackPower100 = 5;
+  int64 MaxHP1 = 6;
+  int64 MaxHP100 = 7;
+  int64 DefensePower1 = 8;
+  int64 DefensePower100 = 9;
+  int64 HealPower1 = 10;
+  int64 HealPower100 = 11;
+  int64 DodgePoint = 12;
+  int64 AccuracyPoint = 13;
+  int64 CriticalPoint = 14;
+  int64 CriticalResistPoint = 15;
+  int64 CriticalDamageRate = 16;
+  int64 CriticalDamageResistRate = 17;
+  int64 BlockRate = 18;
+  int64 HealEffectivenessRate = 19;
+  int64 OppressionPower = 20;
+  int64 OppressionResist = 21;
+  int64 DefensePenetration1 = 22;
+  int64 DefensePenetration100 = 23;
+  int64 DefensePenetrationResist1 = 24;
+  int64 DefensePenetrationResist100 = 25;
+  int64 EnhanceExplosionRate = 26;
+  int64 EnhancePierceRate = 27;
+  int64 EnhanceMysticRate = 28;
+  int64 EnhanceSonicRate = 29;
+  int64 EnhanceSiegeRate = 30;
+  int64 EnhanceNormalRate = 31;
+  int64 EnhanceLightArmorRate = 32;
+  int64 EnhanceHeavyArmorRate = 33;
+  int64 EnhanceUnarmedRate = 34;
+  int64 EnhanceElasticArmorRate = 35;
+  int64 EnhanceStructureRate = 36;
+  int64 EnhanceNormalArmorRate = 37;
+  int64 ExtendBuffDuration = 38;
+  int64 ExtendDebuffDuration = 39;
+  int64 ExtendCrowdControlDuration = 40;
+  int64 AmmoCount = 41;
+  int64 AmmoCost = 42;
+  int64 IgnoreDelayCount = 43;
+  int64 NormalAttackSpeed = 44;
+  int64 Range = 45;
+  int64 InitialRangeRate = 46;
+  int64 MoveSpeed = 47;
+  int64 SightPoint = 48;
+  int64 ActiveGauge = 49;
+  int64 GroggyGauge = 50;
+  int64 GroggyTime = 51;
+  int64 StrategyMobility = 52;
+  int64 ActionCount = 53;
+  int64 StrategySightRange = 54;
+  int64 DamageRatio = 55;
+  int64 DamagedRatio = 56;
+  int64 DamageRatio2Increase = 57;
+  int64 DamageRatio2Decrease = 58;
+  int64 DamagedRatio2Increase = 59;
+  int64 DamagedRatio2Decrease = 60;
+  int64 ExDamagedRatioIncrease = 61;
+  int64 ExDamagedRatioDecrease = 62;
+  int64 EnhanceExDamageRate = 63;
+  int64 ReduceExDamagedRate = 64;
+  int64 HealRate = 65;
+  int64 HealLightArmorRate = 66;
+  int64 HealHeavyArmorRate = 67;
+  int64 HealUnarmedRate = 68;
+  int64 HealElasticArmorRate = 69;
+  int64 HealNormalArmorRate = 70;
+  int64 HealedExplosionRate = 71;
+  int64 HealedPierceRate = 72;
+  int64 HealedMysticRate = 73;
+  int64 HealedSonicRate = 74;
+  int64 HealedNormalRate = 75;
+  string StreetBattleAdaptation = 76;
+  string OutdoorBattleAdaptation = 77;
+  string IndoorBattleAdaptation = 78;
+  int64 RegenCost = 79;
+}
+
+message RaidStageRewardExcelTable {
+  int64 GroupId = 1;
+  bool IsClearStageRewardHideInfo = 2;
+  int64 ClearStageRewardProb = 3;
+  string ClearStageRewardParcelType = 4;
+  int64 ClearStageRewardParcelUniqueID = 5;
+  string ClearStageRewardParcelUniqueName = 6;
+  int64 ClearStageRewardAmount = 7;
+}
+
+message MissionExcelTable {
+  int64 Id = 1;
+  string Category = 2;
+  int64 Description = 3;
+  string ResetType = 4;
+  string ToastDisplayType = 5;
+  string ToastImagePath = 6;
+  bool ViewFlag = 7;
+  bool Limit = 8;
+  string StartDate = 9;
+  string EndDate = 10;
+  int64 EndDay = 11;
+  string StartableEndDate = 12;
+  string DateAutoRefer = 13;
+  int64 DisplayOrder = 14;
+  repeated int64 PreMissionId = 15;
+  string AccountType = 16;
+  int64 AccountLevel = 17;
+  repeated string ContentTags = 18;
+  repeated string ShortcutUI = 19;
+  int64 ChallengeStageShortcut = 20;
+  string CompleteConditionType = 21;
+  int64 CompleteConditionCount = 22;
+  repeated int64 CompleteConditionParameter = 23;
+  repeated string CompleteConditionParameterTag = 24;
+  string RewardIcon = 25;
+  repeated string MissionRewardParcelType = 26;
+  repeated int64 MissionRewardParcelId = 27;
+  repeated int64 MissionRewardAmount = 28;
 }

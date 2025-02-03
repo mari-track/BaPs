@@ -4,8 +4,9 @@ import (
 	"github.com/gucooing/BaPs/common/enter"
 	sro "github.com/gucooing/BaPs/common/server_only"
 	"github.com/gucooing/BaPs/gdconf"
-	"github.com/gucooing/BaPs/mx/proto"
 	"github.com/gucooing/BaPs/pkg/logger"
+	"github.com/gucooing/BaPs/pkg/mx"
+	"github.com/gucooing/BaPs/protocol/proto"
 )
 
 const (
@@ -71,31 +72,40 @@ func NewEchelonTypeInfoList() map[int32]*sro.EchelonTypeInfo {
 		if list[conf.EchlonId].EchelonInfoList == nil {
 			list[conf.EchlonId].EchelonInfoList = make(map[int64]*sro.EchelonInfo)
 		}
-		info := NewEchelonInfo(list[conf.EchlonId], conf)
-		if info == nil {
-			continue
-		}
-		list[conf.EchlonId].EchelonInfoList[info.EchelonNum] = info
+		UpEchelonInfo(list[conf.EchlonId], conf, list[conf.EchlonId].EchelonNum)
 	}
 	return list
 }
 
-func NewEchelonInfo(typeInfo *sro.EchelonTypeInfo, conf *sro.DefaultEchelonExcelTable) *sro.EchelonInfo {
+// 深度更新
+func UpEchelonInfo(typeInfo *sro.EchelonTypeInfo, conf *sro.DefaultEchelonExcelTable, num int64) *sro.EchelonInfo {
 	if typeInfo == nil || conf == nil {
 		return nil
 	}
+	if typeInfo.EchelonInfoList == nil {
+		typeInfo.EchelonInfoList = make(map[int64]*sro.EchelonInfo)
+	}
+
 	info := &sro.EchelonInfo{
 		EchelonType:          conf.EchlonId,
-		ExtensionType:        proto.EchelonExtensionType_Base,
-		EchelonNum:           typeInfo.EchelonNum,
+		ExtensionType:        conf.ExtensionType,
+		EchelonNum:           num,
 		LeaderCharacter:      conf.LeaderId,
 		TssId:                conf.TssId,
 		MainCharacterList:    make(map[int32]int64),
 		SupportCharacterList: make(map[int32]int64),
 		SkillCharacterList:   make(map[int32]int64),
 	}
+	typeInfo.EchelonInfoList[num] = info
+	if typeInfo.EchelonNum <= num {
+		typeInfo.EchelonNum = num + 1
+	}
+
 	var i int32 = 1
 	for ; i <= GetMaxMainEchelonNum(proto.EchelonType(conf.EchlonId)); i++ {
+		if info.MainCharacterList == nil {
+			info.MainCharacterList = make(map[int32]int64)
+		}
 		if len(conf.MainId) < int(i) {
 			info.MainCharacterList[i] = 0
 		} else {
@@ -104,17 +114,26 @@ func NewEchelonInfo(typeInfo *sro.EchelonTypeInfo, conf *sro.DefaultEchelonExcel
 	}
 	i = 1
 	for ; i <= GetSupportEchelonNum(proto.EchelonType(conf.EchlonId)); i++ {
+		if info.SupportCharacterList == nil {
+			info.SupportCharacterList = make(map[int32]int64)
+		}
 		if len(conf.SupportId) < int(i) {
 			info.SupportCharacterList[i] = 0
 		} else {
 			info.SupportCharacterList[i] = conf.SupportId[i-1]
 		}
 	}
-	// i  = 1
-	// for ;i<= GetSkillEchelonNum(proto.EchelonType(conf.EchlonId));i++ {
-	// 	info.MainCharacterList[i] = conf.MainId[i-1]
-	// }
-	typeInfo.EchelonNum++
+	i = 1
+	for ; i <= GetSkillEchelonNum(proto.EchelonType(conf.EchlonId)); i++ {
+		if info.SkillCharacterList == nil {
+			info.SkillCharacterList = make(map[int32]int64)
+		}
+		if len(conf.SkillId) < int(i) {
+			info.SkillCharacterList[i] = 0
+		} else {
+			info.SkillCharacterList[i] = conf.SkillId[i-1]
+		}
+	}
 	return info
 }
 
@@ -138,6 +157,81 @@ func GetEchelonTypeInfoList(s *enter.Session) map[int32]*sro.EchelonTypeInfo {
 		bin.EchelonTypeInfoList = NewEchelonTypeInfoList()
 	}
 	return bin.EchelonTypeInfoList
+}
+
+func GetEchelonTypeInfo(s *enter.Session, echelonType int32) *sro.EchelonTypeInfo {
+	bin := GetEchelonTypeInfoList(s)
+	if bin == nil {
+		return nil
+	}
+	if bin[echelonType] == nil {
+		bin[echelonType] = &sro.EchelonTypeInfo{
+			EchelonInfoList: make(map[int64]*sro.EchelonInfo),
+			EchelonNum:      1,
+		}
+	}
+	return bin[echelonType]
+}
+
+func GetEchelonInfo(s *enter.Session, echelonType int32, num int64) *sro.EchelonInfo {
+	bin := GetEchelonTypeInfo(s, echelonType)
+	if bin == nil {
+		return nil
+	}
+	if bin.EchelonInfoList == nil {
+		bin.EchelonInfoList = make(map[int64]*sro.EchelonInfo)
+	}
+	if bin.EchelonInfoList[num] == nil {
+		bin.EchelonInfoList[num] = &sro.EchelonInfo{
+			EchelonType:          echelonType,
+			ExtensionType:        proto.EchelonExtensionType_Base,
+			EchelonNum:           num,
+			LeaderCharacter:      0,
+			MainCharacterList:    make(map[int32]int64),
+			SupportCharacterList: make(map[int32]int64),
+			SkillCharacterList:   make(map[int32]int64),
+			TssId:                0,
+		}
+	}
+	if bin.EchelonNum <= num {
+		bin.EchelonNum++
+	}
+	return bin.EchelonInfoList[num]
+}
+
+func NewEchelonPresetGuidList() map[int32]*sro.EchelonTypeInfo {
+	list := make(map[int32]*sro.EchelonTypeInfo)
+	for _, gid := range []int32{0, 1, 2, 3} {
+		typeInfo := &sro.EchelonTypeInfo{
+			EchelonInfoList: make(map[int64]*sro.EchelonInfo),
+			EchelonNum:      4,
+		}
+		for _, index := range []int64{0, 1, 2, 3, 4} {
+			typeInfo.EchelonInfoList[index] = &sro.EchelonInfo{
+				EchelonType:          gid,
+				ExtensionType:        0,
+				EchelonNum:           index,
+				LeaderCharacter:      0,
+				MainCharacterList:    make(map[int32]int64),
+				SupportCharacterList: make(map[int32]int64),
+				SkillCharacterList:   make(map[int32]int64),
+				TssId:                0,
+			}
+		}
+		list[gid] = typeInfo
+	}
+	return list
+}
+
+func GetEchelonPresetGuidList(s *enter.Session) map[int32]*sro.EchelonTypeInfo {
+	bin := GetEchelonBin(s)
+	if bin == nil {
+		return nil
+	}
+	if bin.EchelonPresetGuidList == nil {
+		bin.EchelonPresetGuidList = NewEchelonPresetGuidList()
+	}
+	return bin.EchelonPresetGuidList
 }
 
 func GetEchelonDB(s *enter.Session, db *sro.EchelonInfo) *proto.EchelonDB {
@@ -188,15 +282,15 @@ func GetEchelonDB(s *enter.Session, db *sro.EchelonInfo) *proto.EchelonDB {
 	}
 	i = 1
 	for ; i <= GetSkillEchelonNum(proto.EchelonType(db.EchelonType)); i++ {
-		var serverId int64 = 0
+		var characterId int64 = 0
 		characterId, ok := db.SkillCharacterList[i]
 		if ok {
 			characterInfo := GetCharacterInfo(s, characterId)
-			if characterInfo != nil {
-				serverId = characterInfo.ServerId
+			if characterInfo == nil {
+				characterId = 0
 			}
 		}
-		info.SkillCardMulliganCharacterIds = append(info.SkillCardMulliganCharacterIds, serverId)
+		info.SkillCardMulliganCharacterIds = append(info.SkillCardMulliganCharacterIds, characterId)
 	}
 	i = 1
 	for ; i <= GetCombatStyleNum(proto.EchelonType(db.EchelonType)); i++ {
@@ -204,4 +298,177 @@ func GetEchelonDB(s *enter.Session, db *sro.EchelonInfo) *proto.EchelonDB {
 	}
 
 	return info
+}
+
+func GetEchelonPresetGroupDB(db *sro.EchelonInfo) *proto.EchelonPresetDB {
+	if db == nil {
+		return nil
+	}
+	info := &proto.EchelonPresetDB{
+		GroupIndex:             db.EchelonType,
+		Index:                  int32(db.EchelonNum),
+		Label:                  "",
+		LeaderUniqueId:         db.LeaderCharacter,
+		TSSInteractionUniqueId: db.TssId,
+		StrikerUniqueIds:       make([]int64, 0), // 主角色
+		SpecialUniqueIds:       make([]int64, 0), // 支援角色
+		CombatStyleIndex:       make([]int64, 0),
+		MulliganUniqueIds:      make([]int64, 0),
+		ExtensionType:          proto.EchelonExtensionType_Base,
+		StrikerSlotCount:       0,
+		SpecialSlotCount:       0,
+	}
+	var i int32 = 1
+	for ; i <= 6; i++ {
+		id, _ := db.MainCharacterList[i]
+		info.StrikerUniqueIds = append(info.StrikerUniqueIds, id)
+	}
+	i = 1
+	for ; i <= 2; i++ {
+		id, _ := db.SupportCharacterList[i]
+		info.SpecialUniqueIds = append(info.SpecialUniqueIds, id)
+	}
+	i = 1
+	for ; i <= 6; i++ {
+		info.CombatStyleIndex = append(info.CombatStyleIndex, 0)
+	}
+
+	return info
+}
+
+const (
+	AssistTermRewardPeriodFromSec = 20
+	AssistRewardLimit             = 1000000000
+	AssistRentRewardDailyMaxCount = 20
+	AssistRentalFeeAmount         = 40000
+)
+
+func GetAssistList(s *enter.Session) map[int32]*sro.AssistList {
+	bin := GetEchelonBin(s)
+	if bin == nil {
+		return nil
+	}
+	if bin.AssistList == nil {
+		bin.AssistList = make(map[int32]*sro.AssistList)
+	}
+	return bin.AssistList
+}
+
+func GetAssistListByEchelonType(s *enter.Session, echelonType proto.EchelonType) *sro.AssistList {
+	bin := GetEchelonBin(s)
+	if bin == nil {
+		return nil
+	}
+	if bin.AssistList == nil {
+		bin.AssistList = make(map[int32]*sro.AssistList)
+	}
+	return bin.AssistList[int32(echelonType)]
+}
+
+func GetAssistInfo(s *enter.Session, echelonType proto.EchelonType, slot int32) *sro.AssistInfo {
+	bin := GetAssistListByEchelonType(s, echelonType)
+	if bin == nil {
+		return nil
+	}
+	return bin.AssistInfoList[slot]
+}
+
+func GetClanAssistSlotDBs(s *enter.Session) []*proto.ClanAssistSlotDB {
+	list := make([]*proto.ClanAssistSlotDB, 0)
+	for _, assist := range GetAssistList(s) {
+		if assist.AssistInfoList == nil {
+			assist.AssistInfoList = make(map[int32]*sro.AssistInfo)
+		}
+		for slot, info := range assist.AssistInfoList {
+			clanAssistSlotDB := GetClanAssistSlotDB(s, info)
+			if clanAssistSlotDB == nil {
+				delete(assist.AssistInfoList, slot)
+				continue
+			}
+			list = append(list, clanAssistSlotDB)
+		}
+	}
+
+	return list
+}
+
+func GetClanAssistSlotDB(s *enter.Session, info *sro.AssistInfo) *proto.ClanAssistSlotDB {
+	characterInfo := GetCharacterInfo(s, info.CharacterId)
+	if characterInfo == nil {
+		return nil
+	}
+	return &proto.ClanAssistSlotDB{
+		EchelonType:      proto.EchelonType(info.EchelonType),
+		SlotNumber:       info.SlotNumber,
+		CharacterDBId:    characterInfo.ServerId,
+		DeployDate:       mx.Unix(info.DeployDate, 0),
+		TotalRentCount:   info.TotalRentCount,
+		CombatStyleIndex: 0,
+	}
+}
+
+func GetAssistCharacterDBs(s *enter.Session, assistRelation proto.AssistRelation) []*proto.AssistCharacterDB {
+	list := make([]*proto.AssistCharacterDB, 0)
+	for _, assist := range GetAssistList(s) {
+		for slot, info := range assist.AssistInfoList {
+			if assist.AssistInfoList == nil {
+				assist.AssistInfoList = make(map[int32]*sro.AssistInfo)
+			}
+			assistCharacterDB := GetAssistCharacterDB(s, info, assistRelation)
+			if assistCharacterDB == nil {
+				delete(assist.AssistInfoList, slot)
+				continue
+			}
+			list = append(list)
+		}
+	}
+
+	return list
+}
+
+func GetAssistCharacterDB(s *enter.Session, info *sro.AssistInfo, assistRelation proto.AssistRelation) *proto.AssistCharacterDB {
+	if info == nil {
+		return nil
+	}
+	characterInfo := GetCharacterInfo(s, info.CharacterId)
+	if characterInfo == nil {
+		return nil
+	}
+	assistCharacterDB := &proto.AssistCharacterDB{
+		EchelonType:             proto.EchelonType(info.EchelonType),
+		AccountId:               s.AccountServerId,
+		AssistRelation:          assistRelation,
+		AssistCharacterServerId: characterInfo.ServerId,
+		EquipmentDBs:            make([]*proto.EquipmentDB, 0),
+		ExSkillLevel:            characterInfo.ExSkillLevel,
+		Exp:                     characterInfo.Exp,
+		ExtraPassiveSkillLevel:  characterInfo.ExtraPassiveSkillLevel,
+		FavorRank:               characterInfo.FavorRank,
+		FavorExp:                characterInfo.FavorExp,
+		GearDB:                  GetGearDB(s, characterInfo.GearServerId),
+		LeaderSkillLevel:        characterInfo.LeaderSkillLevel,
+		Level:                   characterInfo.Level,
+		NickName:                GetNickname(s),
+		PassiveSkillLevel:       characterInfo.PassiveSkillLevel,
+		PotentialStats:          characterInfo.PotentialStats,
+		PublicSkillLevel:        characterInfo.CommonSkillLevel,
+		SlotNumber:              int32(info.SlotNumber),
+		StarGrade:               characterInfo.StarGrade,
+		Type:                    proto.ParcelType_Character,
+		UniqueId:                characterInfo.CharacterId,
+		WeaponDB:                GetWeaponDB(s, characterInfo.CharacterId),
+
+		CostumeId:        0,
+		CostumeDB:        nil,
+		IsMulligan:       false,
+		IsTSAInteraction: false,
+		CombatStyleIndex: 0,
+	}
+	for _, serverId := range characterInfo.EquipmentList {
+		if equipmentDB := GetEquipmentDB(s, serverId); equipmentDB != nil {
+			assistCharacterDB.EquipmentDBs = append(assistCharacterDB.EquipmentDBs,
+				equipmentDB)
+		}
+	}
+	return assistCharacterDB
 }
