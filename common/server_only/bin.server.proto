@@ -20,6 +20,7 @@ message PlayerBin {
     MomoTalkBin momo_talk_bin = 13; // MomoTalk 信息
     DungeonBin dungeon_bin = 14; // 副本信息
     RankBin rank_bin = 15; // 总力战/竞技场信息
+    AttendanceBin attendance_bin = 16; // 登录奖励
 }
 
 // 基础信息
@@ -203,6 +204,7 @@ message MissionBin{
   map<int64,bool> tutorial_list = 1; // 已完成的教程
   map<int64,ScenarioGroupHistoryInfo> scenario_group_history_info_list = 2; // 场景剧情完成信息
   map<int64,ScenarioHistoryInfo> scenario_history_info_list = 3; // 剧情完成信息
+  map<string,CategoryMissionInfo> category_mission_info = 4;
 }
 
 message ScenarioGroupHistoryInfo {
@@ -215,6 +217,20 @@ message ScenarioGroupHistoryInfo {
 message ScenarioHistoryInfo {
   int64 scenario_unique_id = 1;
   int64 clear_date_time = 2;
+}
+
+message CategoryMissionInfo {
+  int64 last_mission = 1; // 上一次任务刷新时间
+  map<int64,MissionInfo> mission_list = 2; // 接取的任务列表
+}
+
+message MissionInfo {
+  int64 mission_id = 1; // 任务id
+  int64 start_time = 2; // 接取时间
+  bool complete = 3; // 是否完成
+  map<int64,int64>progress_parameters = 4; // 进度
+  bool finish = 5; // 是否已领取奖励
+  int64 complete_time = 6; // 完成时间
 }
 
 // 队伍信息
@@ -251,6 +267,8 @@ message AssistInfo {
   int64 character_id = 3;
   int64 deploy_date = 4;
   int64 total_rent_count = 5; // 使用次数
+  bool is_mulligan = 6;
+  int32 combat_style_index = 7;
 }
 
 // 抽卡记录
@@ -384,6 +402,9 @@ message RaidInfo {
   map<int32,RaidTeamInfo> raid_team_list = 5; // 参赛队伍信息
   int32 difficulty = 6; // 最高难度
   int32 tier = 7; // 牌子 历史用当期实时读取
+  bool is_ranking_reward = 8; // 是否领取结算奖励
+  map<int64,bool> receive_reward_ids = 9; // 已领取的奖励
+  int64 ranking_reward_id = 10; // 领取的结算奖励
 }
 
 message RaidTeamInfo {
@@ -424,4 +445,18 @@ message CurRaidBattleInfo {
   int32 index_damage = 17; // 序号
   int64 server_id = 18; // 战斗次数
   int32 warn_num = 19; // 警告等级
+}
+
+// 登录奖励
+
+message AttendanceBin {
+  map<int64,AttendanceInfo> attendance_list = 1;
+}
+
+message AttendanceInfo {
+  int64 attendance_id = 1;
+  int64 server_id = 2;
+  map<int64,int64> attended_day = 3;
+  int64 last_reward = 4; // 上一次领取时间
+  bool expired = 5; // 是否结束
 }

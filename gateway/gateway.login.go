@@ -50,13 +50,13 @@ func (g *Gateway) getEnterTicket(c *gin.Context) {
 		return
 	}
 	rsp.EnterTicket = enterTicket
-	rsp.SetSessionKey(&mx.BasePacket{
+	rsp.SetSessionKey(&proto.BasePacket{
 		Protocol: req.Protocol,
 	})
 	logger.Debug("EnterTicket交换成功:%s", rsp.EnterTicket)
 }
 
-func (g *Gateway) AccountCheckYostar(s *enter.Session, request, response mx.Message) {
+func (g *Gateway) AccountCheckYostar(s *enter.Session, request, response proto.Message) {
 	req := request.(*proto.AccountCheckYostarRequest)
 	rsp := response.(*proto.AccountCheckYostarResponse)
 	var err error
@@ -67,9 +67,15 @@ func (g *Gateway) AccountCheckYostar(s *enter.Session, request, response mx.Mess
 		logger.Debug("EnterTicket验证失败")
 		return
 	}
+	if enter.GetSessionNum() >= enter.MaxPlayerNum &&
+		enter.MaxPlayerNum > 0 {
+		rsp.ResultMessag = "在线玩家满"
+		logger.Debug("在线玩家满")
+		return
+	}
 	enter.DelEnterTicket(req.EnterTicket)
 	s = enter.GetSessionByAccountServerId(tickInfo.AccountServerId)
-	mxToken := fmt.Sprintf("%v%s", alg.GetSnow().GenId(), alg.RandStr(30))
+	mxToken := mx.GetMxToken(tickInfo.AccountServerId, 64)
 	if s == nil {
 		yostarGame := db.GetYostarGameByAccountServerId(tickInfo.AccountServerId)
 		if yostarGame == nil {
@@ -98,8 +104,8 @@ func (g *Gateway) AccountCheckYostar(s *enter.Session, request, response mx.Mess
 		logger.Info("AccountServerId:%v,上线账号", tickInfo.AccountServerId)
 	}
 	rsp.ResultState = 1
-	base := &mx.BasePacket{
-		SessionKey: &mx.SessionKey{
+	base := &proto.BasePacket{
+		SessionKey: &proto.SessionKey{
 			AccountServerId: tickInfo.AccountServerId,
 			MxToken:         s.MxToken,
 		},

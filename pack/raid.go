@@ -8,19 +8,27 @@ import (
 	"github.com/gucooing/BaPs/game"
 	"github.com/gucooing/BaPs/gdconf"
 	"github.com/gucooing/BaPs/pkg/logger"
-	"github.com/gucooing/BaPs/pkg/mx"
 	"github.com/gucooing/BaPs/protocol/proto"
 )
 
-func RaidLogin(s *enter.Session, request, response mx.Message) {
+func RaidLogin(s *enter.Session, request, response proto.Message) {
 	rsp := response.(*proto.RaidLoginResponse)
 
+	game.RaidCheck(s) // 总力战检查
 	rsp.SeasonType = game.GetRaidSeasonType()
+	bin := game.GetCurRaidInfo(s)
+	if cur := gdconf.GetCurRaidSchedule(); cur != nil && bin != nil {
+		rsp.CanReceiveRankingReward = game.GetCanReceiveRankingReward(
+			time.Now().After(cur.EndTime), bin.GetIsRankingReward())
+		rsp.LastSettledRanking = game.GetLastRaidInfo(s).GetRanking()
+		rsp.LastSettledTier = game.GetLastRaidInfo(s).GetTier()
+	}
 }
 
-func RaidLobby(s *enter.Session, request, response mx.Message) {
+func RaidLobby(s *enter.Session, request, response proto.Message) {
 	rsp := response.(*proto.RaidLobbyResponse)
 
+	game.RaidCheck(s) // 总力战检查
 	curBattle := game.GetCurRaidBattleInfo(s)
 	// 超时了
 	if curBattle != nil &&
@@ -37,7 +45,7 @@ func RaidLobby(s *enter.Session, request, response mx.Message) {
 	}
 }
 
-func RaidOpponentList(s *enter.Session, request, response mx.Message) {
+func RaidOpponentList(s *enter.Session, request, response proto.Message) {
 	req := request.(*proto.RaidOpponentListRequest)
 	rsp := response.(*proto.RaidOpponentListResponse)
 
@@ -56,21 +64,21 @@ func RaidOpponentList(s *enter.Session, request, response mx.Message) {
 	}
 }
 
-func RaidGetBestTeam(s *enter.Session, request, response mx.Message) {
+func RaidGetBestTeam(s *enter.Session, request, response proto.Message) {
 	req := request.(*proto.RaidGetBestTeamRequest)
 	rsp := response.(*proto.RaidGetBestTeamResponse)
 
 	rsp.RaidTeamSettingDBs = make([]*proto.RaidTeamSettingDB, 0)
-	as := enter.GetSessionByUid(req.AccountId)
+	as := enter.GetSessionByUid(req.SearchAccountId)
 	if as == nil {
 		return
 	}
-	for _, bin := range game.GetCurRaidTeamList(s) {
+	for _, bin := range game.GetCurRaidTeamList(as) {
 		rsp.RaidTeamSettingDBs = append(rsp.RaidTeamSettingDBs, game.GetRaidTeamSettingDB(as, bin))
 	}
 }
 
-func RaidCreateBattle(s *enter.Session, request, response mx.Message) {
+func RaidCreateBattle(s *enter.Session, request, response proto.Message) {
 	req := request.(*proto.RaidCreateBattleRequest)
 	rsp := response.(*proto.RaidCreateBattleResponse)
 
@@ -91,7 +99,7 @@ func RaidCreateBattle(s *enter.Session, request, response mx.Message) {
 	}
 	if assist := req.AssistUseInfo; assist != nil && !curBattle.IsAssist {
 		ac := enter.GetSessionByUid(assist.CharacterAccountId)
-		assistInfo := game.GetAssistInfo(ac, assist.EchelonType, assist.SlotNumber)
+		assistInfo := game.GetAssistInfoByClanAssistUseInfo(ac, assist)
 		rsp.AssistCharacterDB = game.GetAssistCharacterDB(ac, assistInfo, assist.AssistRelation)
 	}
 
@@ -103,7 +111,7 @@ func RaidCreateBattle(s *enter.Session, request, response mx.Message) {
 	rsp.RaidDB = game.GetRaidDB(s)
 }
 
-func RaidEndBattle(s *enter.Session, request, response mx.Message) {
+func RaidEndBattle(s *enter.Session, request, response proto.Message) {
 	req := request.(*proto.RaidEndBattleRequest)
 	rsp := response.(*proto.RaidEndBattleResponse)
 
@@ -142,7 +150,7 @@ func RaidEndBattle(s *enter.Session, request, response mx.Message) {
 	}
 }
 
-func RaidEnterBattle(s *enter.Session, request, response mx.Message) {
+func RaidEnterBattle(s *enter.Session, request, response proto.Message) {
 	req := request.(*proto.RaidEnterBattleRequest)
 	rsp := response.(*proto.RaidEnterBattleResponse)
 
@@ -168,7 +176,7 @@ func RaidEnterBattle(s *enter.Session, request, response mx.Message) {
 	rsp.RaidDB = game.GetRaidDB(s)
 }
 
-func RaidGiveUp(s *enter.Session, request, response mx.Message) {
+func RaidGiveUp(s *enter.Session, request, response proto.Message) {
 	req := request.(*proto.RaidGiveUpRequest)
 	rsp := response.(*proto.RaidGiveUpResponse)
 
@@ -177,9 +185,68 @@ func RaidGiveUp(s *enter.Session, request, response mx.Message) {
 		req.IsPractice != curBattle.IsPractice {
 		return
 	}
+	curBattle.IsClose = true
 	parcelResult := game.RaidClose(s)
 	if !curBattle.IsPractice {
 		rsp.RaidGiveUpDB = game.GetRaidGiveUpDB(s)
 		rsp.ParcelResultDB = game.ParcelResultDB(s, parcelResult)
 	}
+}
+
+func RaidSeasonReward(s *enter.Session, request, response proto.Message) {
+	rsp := response.(*proto.RaidSeasonRewardResponse)
+
+	defer func() {
+		game.SetServerNotification(s, proto.ServerNotificationFlag_CanReceiveRaidReward, false)
+		rsp.ReceiveRewardIds = game.GetReceiveRewardIds(s)
+	}()
+	bin := game.GetCurRaidInfo(s)
+	if bin == nil {
+		return
+	}
+	if bin.ReceiveRewardIds == nil {
+		bin.ReceiveRewardIds = make(map[int64]bool)
+	}
+	seasonConf := gdconf.GetRaidSeasonManageExcelTable(bin.SeasonId)
+	if seasonConf == nil ||
+		len(seasonConf.StackedSeasonRewardGauge) != len(seasonConf.SeasonRewardId) {
+		return
+	}
+	parcelResultList := make([]*game.ParcelResult, 0)
+	for index, season := range seasonConf.StackedSeasonRewardGauge {
+		rewardId := seasonConf.SeasonRewardId[index]
+		if _, ok := bin.ReceiveRewardIds[rewardId]; !ok &&
+			bin.TotalScore >= season {
+			rewardConf := gdconf.GetRaidStageSeasonRewardExcelTable(rewardId)
+			if rewardConf == nil {
+				continue
+			}
+			parcelResultList = append(parcelResultList,
+				game.GetParcelResultList(rewardConf.SeasonRewardParcelType,
+					rewardConf.SeasonRewardParcelUniqueId, rewardConf.SeasonRewardAmount, false)...)
+
+			bin.ReceiveRewardIds[rewardId] = true
+		}
+	}
+	rsp.ParcelResultDB = game.ParcelResultDB(s, parcelResultList)
+}
+
+func RaidRankingReward(s *enter.Session, request, response proto.Message) {
+	rsp := response.(*proto.RaidRankingRewardResponse)
+
+	bin := game.GetCurRaidInfo(s)
+	if bin == nil || bin.IsRankingReward {
+		return
+	}
+	// 拉取一次排名
+	bin.Ranking = rank.GetRaidRank(bin.SeasonId, s.AccountServerId)
+	conf := gdconf.GetRaidRankingRewardExcelTableBySeasonId(bin.SeasonId, bin.Ranking)
+	if conf == nil {
+		return
+	}
+	rsp.ParcelResultDB = game.ParcelResultDB(s, game.GetParcelResultList(conf.RewardParcelType,
+		conf.RewardParcelUniqueId, conf.RewardParcelAmount, false))
+	bin.IsRankingReward = true
+	bin.RankingRewardId = conf.Id
+	rsp.ReceivedRankingRewardId = bin.RankingRewardId
 }

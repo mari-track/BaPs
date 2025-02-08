@@ -54,6 +54,7 @@ message Excel {
   repeated CharacterStatExcelTable CharacterStatExcelTable = 45; // 实体属性配置
   repeated RaidStageRewardExcelTable RaidStageRewardExcelTable = 46; // 总力战关卡通过奖励配置
   repeated MissionExcelTable MissionExcelTable = 47; // 任务配置
+  repeated RaidStageSeasonRewardExcelTable RaidStageSeasonRewardExcelTable = 48; // 总力战总分奖励配置
 }
 
 message CafeInfoExcelTableInfo {
@@ -936,4 +937,12 @@ message MissionExcelTable {
   repeated string MissionRewardParcelType = 26;
   repeated int64 MissionRewardParcelId = 27;
   repeated int64 MissionRewardAmount = 28;
+}
+
+message RaidStageSeasonRewardExcelTable {
+  int64 SeasonRewardId = 1;
+  repeated string SeasonRewardParcelType = 2;
+  repeated int64 SeasonRewardParcelUniqueId = 3;
+  repeated string SeasonRewardParcelUniqueName = 4;
+  repeated int64 SeasonRewardAmount = 5;
 }

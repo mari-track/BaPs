@@ -10,6 +10,7 @@ import (
 	"github.com/gucooing/BaPs/pkg/logger"
 	"github.com/gucooing/BaPs/pkg/mx"
 	"github.com/gucooing/BaPs/protocol"
+	"github.com/gucooing/BaPs/protocol/proto"
 )
 
 type Gateway struct {
@@ -22,6 +23,7 @@ func NewGateWay(router *gin.Engine) *Gateway {
 		router: router,
 	}
 	enter.MaxCachePlayerTime = alg.MaxInt(config.GetGateWay().MaxCachePlayerTime, 30)
+	enter.MaxPlayerNum = config.GetGateWay().MaxPlayerNum
 	g.initRouter()
 
 	return g
@@ -36,7 +38,7 @@ func (g *Gateway) initRouter() {
 	}
 }
 
-func (g *Gateway) send(c *gin.Context, n mx.Message) {
+func (g *Gateway) send(c *gin.Context, n proto.Message) {
 	rsp, err := protocol.MarshalResponse(n)
 	if err != nil {
 		logger.Debug("marshal err:", err)

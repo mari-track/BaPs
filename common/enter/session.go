@@ -12,12 +12,12 @@ import (
 	"github.com/gucooing/BaPs/db"
 	"github.com/gucooing/BaPs/pkg/alg"
 	"github.com/gucooing/BaPs/pkg/logger"
-	"github.com/gucooing/BaPs/pkg/mx"
 	"github.com/gucooing/BaPs/protocol/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
 var MaxCachePlayerTime = 120 // 最大玩家缓存时间 单位:分钟
+var MaxPlayerNum int64 = 0   // 最大在线玩家
 
 type Session struct {
 	AccountServerId int64
@@ -29,6 +29,7 @@ type Session struct {
 	Actions         map[proto.ServerNotificationFlag]bool
 	GoroutinesSync  sync.Mutex
 	AccountFriend   *AccountFriend
+	Mission         *Mission
 }
 
 // 定时检查一次是否有用户长时间离线
@@ -43,7 +44,7 @@ func (e *EnterSet) checkSession() {
 }
 
 // GetSessionBySessionKey 获取指定在线玩家
-func GetSessionBySessionKey(sessionKey *mx.SessionKey) *Session {
+func GetSessionBySessionKey(sessionKey *proto.SessionKey) *Session {
 	if sessionKey == nil ||
 		sessionKey.AccountServerId == 0 ||
 		sessionKey.MxToken == "" {
@@ -131,6 +132,13 @@ func GetAllSessionList() []*Session {
 		allSession = append(allSession, v)
 	}
 	return allSession
+}
+
+func GetSessionNum() int64 {
+	e := getEnterSet()
+	e.sessionSync.RLock()
+	defer e.sessionSync.RUnlock()
+	return int64(len(e.SessionMap))
 }
 
 // DelSession 删除指定在线玩家
